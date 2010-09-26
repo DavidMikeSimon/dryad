@@ -1,0 +1,2 @@
+class Dryad
+end
