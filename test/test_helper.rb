@@ -8,6 +8,11 @@ end
 
 class Test::Unit::TestCase
   def setup
-    puts "SETUP"
+    @dryad = Dryad.new
+  end
+  
+  def assert_dryad_output(output, &block)
+    result = @dryad.run(&block)
+    assert_equal output, result
   end
 end
