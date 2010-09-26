@@ -1,6 +1,14 @@
 class Dryad
   def tag!(sym)
-    return "<#{sym.to_s}>" + yield + "</#{sym.to_s}>"
+    contents = ""
+    if block_given?
+      contents = yield.to_s
+    end
+    if contents != ""
+      return "<#{sym.to_s}>" + yield + "</#{sym.to_s}>"
+    else
+      return "<#{sym.to_s}/>"
+    end
   end
 
   def run(&block)
