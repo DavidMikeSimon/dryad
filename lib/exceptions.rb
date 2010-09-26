@@ -2,7 +2,7 @@ module Dryad
   class DryadException < Exception
   end
 
-  class NoSuchTagException < Exception
+  class NoSuchTagException < DryadException
     attr_reader :tag_name
    
     def initialize(tag_sym)
