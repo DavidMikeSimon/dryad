@@ -38,4 +38,24 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
   end
+
+  def test_prepend_and_append
+    @taglib.add do
+      def foo(&block)
+        raw_tag! :bar, &block
+      end
+    end
+
+    assert_output "XYZZY<bar>narf</bar>KABLOOIE", @taglib do
+      def foo(&block)
+        raw_text! "XYZZY"
+        super
+        raw_text! "KABLOOIE"
+      end
+
+      foo do
+        raw_text! "narf"
+      end
+    end
+  end
 end

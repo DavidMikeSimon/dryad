@@ -7,7 +7,7 @@ module Dryad
     end
 
     def output(&block)
-      builder = DocumentBuilder.new(self)
+      builder = DocumentBuilder.new
       @blocks.each do |b|
         builder.instance_eval &b
       end
@@ -20,8 +20,7 @@ module Dryad
   end
 
   class DocumentBuilder
-    def initialize(taglib)
-      @taglib = taglib
+    def initialize
       @output_stack = []
     end
 
@@ -50,7 +49,8 @@ module Dryad
 
     def run!(input_source = nil, &block)
       @output_stack.push []
-      instance_eval(&block)
+      # Cloning so that tags redefined in block can 'super' to the original
+      self.clone.instance_eval(&block)
       return @output_stack.pop.join
     end
 
