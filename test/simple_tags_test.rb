@@ -1,7 +1,7 @@
 require 'test_helper'
 
-class DryadTest < Test::Unit::TestCase
-  def test_simple_tag!
+class SimpleTagsTest < Test::Unit::TestCase
+  def test_very_simple_tag!
     assert_dryad_output "<foo>Bar</foo>" do
       tag! :foo do
         raw_text! "Bar"
