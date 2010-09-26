@@ -5,11 +5,8 @@ class HtmlTest < Test::Unit::TestCase
   def setup
     @taglib = Dryad::TagLibrary.new
     @taglib.add_module(HtmlTags)
-  end
 
-  def test_simple_document
-    doc = "<html><body><p>Hello <b>world!</b></p><hr/><p>I am a banana!</p></body></html>"
-    assert_output doc, @taglib do
+    @simple_document_block = proc do
       html do
         body do
           p do
@@ -24,6 +21,24 @@ class HtmlTest < Test::Unit::TestCase
           end
         end
       end
+    end
+  end
+
+  def test_simple_document
+    doc = "<html><body><p>Hello <b>world!</b></p><hr/><p>I am a banana!</p></body></html>"
+    assert_output doc, @taglib, &@simple_document_block
+  end
+
+  def test_default_setting
+    doc = '<html><body><p>Hello <b class="foo">world!</b></p><hr/><p>I am a banana!</p></body></html>'
+    sdb = @simple_document_block
+    assert_output doc, @taglib do
+      def b(params = {}, &block)
+        params["class"] = "foo"
+        super
+      end
+      
+      instance_eval &sdb
     end
   end
 end
