@@ -2,7 +2,7 @@ require 'test_helper'
 
 class CustomTagsTest < Test::Unit::TestCase
   def test_simple_tag_def
-    @dryad.define_tag "foo" do
+    @taglib.define_tag "foo" do
       raw_tag! :bar
     end
 
@@ -12,7 +12,7 @@ class CustomTagsTest < Test::Unit::TestCase
   end
 
   def test_block_passthru
-    @dryad.define_tag "foo" do
+    @taglib.define_tag "foo" do
       raw_tag! :bar, &content_arg!
     end
  

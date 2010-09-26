@@ -8,11 +8,11 @@ end
 
 class Test::Unit::TestCase
   def setup
-    @dryad = Dryad.new
+    @taglib = Dryad::TagLibrary.new
   end
   
   def assert_dryad_output(output, &block)
-    result = @dryad.build_document(&block)
+    result = @taglib.build_document(&block)
     assert_equal output, result
   end
 end
