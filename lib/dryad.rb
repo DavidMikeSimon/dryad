@@ -16,14 +16,17 @@ class DryadDocumentBuilder
     @stack.last.push(text.strip)
   end
 
-  def tag!(sym)
-    contents = run! do
-      yield if block_given?
+  def tag!(sym, params = {})
+    param_str = ""
+    if params.size > 0
+      param_str = " " + params.map{|k,v| "#{k}=\"#{v}\""}.join(" ")
     end
+
+    contents = run! { yield if block_given? }
     if contents != ""
-      raw_text! "<#{sym.to_s}>" + contents + "</#{sym.to_s}>"
+      raw_text! "<#{sym.to_s}#{param_str}>" + contents + "</#{sym.to_s}>"
     else
-      raw_text! "<#{sym.to_s}/>"
+      raw_text! "<#{sym.to_s}#{param_str}/>"
     end
   end
   
