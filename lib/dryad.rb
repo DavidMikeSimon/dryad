@@ -36,7 +36,7 @@ class DryadDocumentBuilder
 
   # TODO Add a text! method that escapes its input
 
-  def tag!(sym, params = {})
+  def raw_tag!(sym, params = {})
     param_str = ""
     if params.size > 0
       # TODO Escape values
