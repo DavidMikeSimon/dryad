@@ -24,7 +24,7 @@ module Dryad
       @taglib = taglib
       @output_stack = []
     end
-    
+
     def raw_text!(text)
       @output_stack.last.push(text.strip)
     end
@@ -52,6 +52,10 @@ module Dryad
       @output_stack.push []
       instance_eval(&block)
       return @output_stack.pop.join
+    end
+
+    def method_missing(symbol)
+      raise NoSuchTagError.new(symbol)
     end
   end
 end

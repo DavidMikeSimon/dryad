@@ -1,8 +1,8 @@
 module Dryad
-  class DryadException < Exception
+  class DryadError < RuntimeError
   end
 
-  class NoSuchTagException < DryadException
+  class NoSuchTagError < DryadError
     attr_reader :tag_name
    
     def initialize(tag_sym)

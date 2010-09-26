@@ -17,6 +17,14 @@ class CustomTagsTest < Test::Unit::TestCase
     end
   end
 
+  def test_invalid_tag
+    assert_raise Dryad::NoSuchTagError do
+      @taglib.output do
+        foobar
+      end
+    end
+  end
+
   def test_block_passthru
     @taglib.add do
       def foo(&block)
