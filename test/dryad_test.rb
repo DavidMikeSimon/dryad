@@ -19,4 +19,20 @@ class DryadTest < Test::Unit::TestCase
       end
     end
   end
+
+  def test_empty_tag_due_to_whitespace_stripping
+    assert_dryad_output "<foo/>" do
+      tag!(:foo) do
+        "    "
+      end
+    end
+  end
+
+  def test_whitespace_stripping
+    assert_dryad_output "<foo>bar</foo>" do
+      tag!(:foo) do
+        "   bar   "
+      end
+    end
+  end
 end

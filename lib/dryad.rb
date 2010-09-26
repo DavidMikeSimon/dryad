@@ -2,10 +2,10 @@ class Dryad
   def tag!(sym)
     contents = ""
     if block_given?
-      contents = yield.to_s
+      contents = yield.to_s.strip
     end
     if contents != ""
-      return "<#{sym.to_s}>" + yield + "</#{sym.to_s}>"
+      return "<#{sym.to_s}>" + contents + "</#{sym.to_s}>"
     else
       return "<#{sym.to_s}/>"
     end
