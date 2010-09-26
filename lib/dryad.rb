@@ -3,20 +3,19 @@ require 'exceptions'
 module Dryad
   class TagLibrary
     def initialize
-      @tag_defs = {}
+      @blocks = []
     end
 
     def output(&block)
       builder = DocumentBuilder.new(self)
+      @blocks.each do |b|
+        builder.instance_eval &b
+      end
       return builder.send(:run!, &block)
     end
 
-    def define_tag(sym, &block)
-      @tag_defs[sym.to_sym] = block
-    end
-
-    def get_tag(sym)
-      @tag_defs[sym] or raise NoSuchTagException.new(sym)
+    def add(&block)
+      @blocks.push block
     end
   end
 

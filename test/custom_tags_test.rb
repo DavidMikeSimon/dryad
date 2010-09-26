@@ -6,8 +6,10 @@ class CustomTagsTest < Test::Unit::TestCase
   end
 
   def test_simple_tag_def
-    @taglib.define_tag "foo" do
-      raw_tag! :bar
+    @taglib.add do
+      def foo
+        raw_tag! :bar
+      end
     end
 
     assert_output "<bar/>", @taglib do
@@ -16,10 +18,12 @@ class CustomTagsTest < Test::Unit::TestCase
   end
 
   def test_block_passthru
-    @taglib.define_tag "foo" do
-      raw_tag! :bar, &content_block!
+    @taglib.add do
+      def foo(&block)
+        raw_tag! :bar, &block
+      end
     end
- 
+     
     assert_output "<bar>narf</bar>", @taglib do
       foo do
         raw_text! "narf"
