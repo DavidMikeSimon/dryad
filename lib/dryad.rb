@@ -1,9 +1,15 @@
 class Dryad
+  def run(&block)
+    @stack = []
+    instance_eval &block
+  end
+
+  private
+  
   def tag!(sym)
-    contents = ""
-    if block_given?
-      contents = yield.to_s.strip
-    end
+    @stack.push []
+    yield if block_given?
+    contents = @stack.pop.join
     if contents != ""
       return "<#{sym.to_s}>" + contents + "</#{sym.to_s}>"
     else
@@ -11,7 +17,7 @@ class Dryad
     end
   end
 
-  def run(&block)
-    instance_eval &block
+  def raw_text!(text)
+    @stack.last.push(text.strip)
   end
 end
