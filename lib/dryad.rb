@@ -33,7 +33,7 @@ module Dryad
     end
 
     def raw_text!(text)
-      @io.write(text.strip)
+      @io.write(text)
     end
 
     # TODO Add a text! method that escapes its input
@@ -57,7 +57,7 @@ module Dryad
     private
 
     def run!(input_source = nil, &block)
-      # Cloning so that tags redefined in block can 'super' to the original
+      # Cloning so that tags redefined in block can 'super' back to the original
       self.clone.instance_eval(&block)
     end
 

@@ -19,22 +19,6 @@ class SimpleTagsTest < Test::Unit::TestCase
     end
   end
 
-  def test_empty_raw_tag!_due_to_whitespace_stripping
-    assert_output "<foo/>", @taglib do
-      raw_tag! :foo do
-        raw_text! "    "
-      end
-    end
-  end
-
-  def test_whitespace_stripping
-    assert_output "<foo>bar</foo>", @taglib do
-      raw_tag! :foo do
-        raw_text! "   bar   "
-      end
-    end
-  end
-
   def test_simple_concatenation
     assert_output "<foo>xyzzy</foo>", @taglib do
       raw_tag! :foo do
