@@ -12,7 +12,7 @@ class Test::Unit::TestCase
   end
   
   def assert_dryad_output(output, &block)
-    result = @dryad.run(&block)
+    result = @dryad.build_document(&block)
     assert_equal output, result
   end
 end
