@@ -41,7 +41,7 @@ class CustomTagsTest < Test::Unit::TestCase
     end
   end
 
-  def test_prepend_and_append
+  def test_redef_for_prepend_and_append
     @taglib.add do
       def foo(&block)
         raw_tag! :bar, &block
@@ -61,7 +61,7 @@ class CustomTagsTest < Test::Unit::TestCase
     end
   end
 
-  def test_insertion
+  def test_redef_for_insertion
     @taglib.add do
       def foo(&block)
         raw_tag! :bar, &block

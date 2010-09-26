@@ -3,19 +3,19 @@ require 'exceptions'
 module Dryad
   class TagLibrary
     def initialize
-      @blocks = []
+      @tag_def_blocks = []
     end
 
     def output(target, &block)
       builder = DocumentBuilder.new(target)
-      @blocks.each do |b|
+      @tag_def_blocks.each do |b|
         builder.instance_eval &b
       end
       builder.send(:run!, &block)
     end
 
     def add(&block)
-      @blocks.push block
+      @tag_def_blocks.push block
     end
   end
 

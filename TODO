@@ -2,6 +2,6 @@
   - Makes sure all attribute keys are valid in XML
   - Makes sure all tags are valid in XML
   - In the HTML taglib, checks attributes for tag-specific validity
-  - Does not cause a performance hit if not in use (use OOP, not lots of ifs)
   - Disallows tag definitions that end with question marks or bangs or mask built-in methods
-- NoSuchTagException should suggest similarly-named tags to counteract spelling errors
+  - Does not cause a performance hit if not in use (use OOP, not lots of ifs)
+- NoSuchTagError should suggest similarly-named tags to counteract spelling errors
