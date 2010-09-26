@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'stringio'
 
 class CustomTagsTest < Test::Unit::TestCase
   def setup
@@ -19,7 +20,8 @@ class CustomTagsTest < Test::Unit::TestCase
 
   def test_invalid_tag
     assert_raise Dryad::NoSuchTagError do
-      @taglib.output do
+      sio = StringIO.new
+      @taglib.output sio do
         foobar
       end
     end

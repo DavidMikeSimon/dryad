@@ -6,12 +6,12 @@ module Dryad
       @blocks = []
     end
 
-    def output(&block)
-      builder = DocumentBuilder.new
+    def output(target, &block)
+      builder = DocumentBuilder.new(target)
       @blocks.each do |b|
         builder.instance_eval &b
       end
-      return builder.send(:run!, &block)
+      builder.send(:run!, &block)
     end
 
     def add(&block)
@@ -20,26 +20,27 @@ module Dryad
   end
 
   class DocumentBuilder
-    def initialize
-      @output_stack = []
+    def initialize(io)
+      @io = io
     end
 
     def raw_text!(text)
-      @output_stack.last.push(text.strip)
+      @io.write(text.strip)
     end
 
     # TODO Add a text! method that escapes its input
 
-    def raw_tag!(sym, params = {})
+    def raw_tag!(sym, params = {}, &block)
       param_str = ""
       if params.size > 0
         # TODO Escape values
         param_str = " " + params.map{|k,v| "#{k}=\"#{v}\""}.join(" ")
       end
 
-      contents = run! { yield if block_given? }
-      if contents != ""
-        raw_text! "<#{sym.to_s}#{param_str}>" + contents + "</#{sym.to_s}>"
+      if block
+        raw_text! "<#{sym.to_s}#{param_str}>"
+        run! &block
+        raw_text! "</#{sym.to_s}>"
       else
         raw_text! "<#{sym.to_s}#{param_str}/>"
       end
@@ -48,10 +49,8 @@ module Dryad
     private
 
     def run!(input_source = nil, &block)
-      @output_stack.push []
       # Cloning so that tags redefined in block can 'super' to the original
       self.clone.instance_eval(&block)
-      return @output_stack.pop.join
     end
 
     def method_missing(symbol)

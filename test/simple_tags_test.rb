@@ -5,7 +5,7 @@ class SimpleTagsTest < Test::Unit::TestCase
     @taglib = Dryad::TagLibrary.new
   end
 
-  def test_very_simple_raw_tag!
+  def test_very_simple_raw_tag
     assert_output "<foo>Bar</foo>", @taglib do
       raw_tag! :foo do
         raw_text! "Bar"
@@ -13,14 +13,9 @@ class SimpleTagsTest < Test::Unit::TestCase
     end
   end
 
-  def test_empty_raw_tag!
+  def test_empty_raw_tag
     assert_output "<foo/>", @taglib do
       raw_tag! :foo
-    end
-    
-    assert_output "<foo/>", @taglib do
-      raw_tag! :foo do
-      end
     end
   end
 
@@ -69,5 +64,16 @@ class SimpleTagsTest < Test::Unit::TestCase
     assert_output '<foo x="y"/>', @taglib do
       raw_tag! :foo, :x => "y"
     end
+  end
+
+  def test_io_output
+    sio = StringIO.new
+    @taglib.output sio do
+      raw_tag! :foo
+    end
+    @taglib.output sio do
+      raw_tag! :bar
+    end
+    assert_equal "<foo/><bar/>", sio.string
   end
 end
