@@ -1,13 +1,33 @@
 class Dryad
+  def initialize
+    @tag_defs = {}
+  end
+
   def build_document(&block)
-    builder = DryadDocumentBuilder.new
+    builder = DryadDocumentBuilder.new(self)
+    return builder.send(:run!, &block)
+  end
+
+  def define_tag(sym, &block)
+    @tag_defs[sym.to_sym] = block
+  end
+
+  private
+
+  def execute_tag(sym, builder)
+    block = @tag_defs[sym]
     return builder.send(:run!, &block)
   end
 end
 
 class DryadDocumentBuilder
-  def initialize
+  def initialize(dryad)
+    @dryad = dryad
     @stack = []
+  end
+
+  def method_missing(symbol, *params)
+    raw_text! @dryad.send(:execute_tag, symbol, self)
   end
 
   def raw_text!(text)
@@ -17,11 +37,8 @@ class DryadDocumentBuilder
   # TODO Add a text! method that escapes its input
 
   def tag!(sym, params = {})
-    # TODO In paranoid mode, check if tag is valid
-
     param_str = ""
     if params.size > 0
-      # TODO In paranoid mode, check if key is valid
       # TODO Escape values
       param_str = " " + params.map{|k,v| "#{k}=\"#{v}\""}.join(" ")
     end
