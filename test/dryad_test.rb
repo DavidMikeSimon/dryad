@@ -55,7 +55,7 @@ class DryadTest < Test::Unit::TestCase
     end
   end
 
-  def test_parameters
+  def test_attributes
     assert_dryad_output '<foo x="y">bork</foo>' do
       tag! :foo, :x => "y" do
         raw_text! "bork"
