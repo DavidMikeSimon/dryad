@@ -1,3 +1,15 @@
+class NoSuchTagException < Exception
+  attr_reader :tag_name
+ 
+  def initialize(tag_sym)
+    @tag_name = tag_sym.to_s
+  end
+
+  def to_s
+    "There's no tag named '#{@tag_name}'"
+  end
+end
+
 class Dryad
   def initialize
     @tag_defs = {}
@@ -12,26 +24,31 @@ class Dryad
     @tag_defs[sym.to_sym] = block
   end
 
-  private
-
-  def execute_tag(sym, builder)
-    block = @tag_defs[sym]
-    return builder.send(:run!, &block)
+  def get_tag(sym)
+    @tag_defs[sym] or raise NoSuchTagException.new(sym)
   end
 end
 
 class DryadDocumentBuilder
   def initialize(dryad)
     @dryad = dryad
-    @stack = []
+    @output_stack = []
+    @argument_stack = []
   end
 
-  def method_missing(symbol, *params)
-    raw_text! @dryad.send(:execute_tag, symbol, self)
+  def method_missing(symbol, *params, &content_block)
+    block = @dryad.get_tag(symbol)
+    @argument_stack.push(Arguments.new(params, content_block))
+    instance_eval(&block)
+    @argument_stack.pop
+  end
+
+  def content_arg!
+    return @argument_stack.last.content
   end
 
   def raw_text!(text)
-    @stack.last.push(text.strip)
+    @output_stack.last.push(text.strip)
   end
 
   # TODO Add a text! method that escapes its input
@@ -53,9 +70,19 @@ class DryadDocumentBuilder
   
   private
 
-  def run!(&block)
-    @stack.push []
-    instance_eval &block
-    return @stack.pop.join
+  def run!(input_source = nil, &block)
+    @output_stack.push []
+    instance_eval(&block)
+    return @output_stack.pop.join
+  end
+
+  class Arguments
+    attr_reader :params
+    attr_reader :content
+
+    def initialize(params, content)
+      @params = params
+      @content = content
+    end
   end
 end
