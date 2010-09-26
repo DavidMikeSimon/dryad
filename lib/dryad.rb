@@ -35,7 +35,7 @@ module Dryad
     end
 
     def content_arg!
-      return @argument_stack.last.content
+      return @argument_stack.last.block
     end
 
     def raw_text!(text)
@@ -69,11 +69,11 @@ module Dryad
 
     class Arguments
       attr_reader :params
-      attr_reader :content
+      attr_reader :block
 
-      def initialize(params, content)
+      def initialize(params, block)
         @params = params
-        @content = content
+        @block = block
       end
     end
   end
