@@ -82,4 +82,20 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
   end
+    
+  module MyCustomTags
+    def foo(&block)
+      raw_tag! :bar, &block
+    end
+  end
+
+  def test_tag_def_modules
+    @taglib.add_module(MyCustomTags)
+
+    assert_output "<bar>narf</bar>", @taglib do
+      foo do
+        raw_text! "narf"
+      end
+    end
+  end
 end

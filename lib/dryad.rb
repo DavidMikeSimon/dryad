@@ -15,7 +15,15 @@ module Dryad
     end
 
     def add(&block)
-      @tag_def_blocks.push block
+      if block
+        @tag_def_blocks.push block
+      else
+        raise DryadError.new("TagLibrary.add must be given a block")
+      end
+    end
+
+    def add_module(tag_module)
+      @tag_def_blocks.push proc { extend tag_module }
     end
   end
 
@@ -54,6 +62,7 @@ module Dryad
     end
 
     def method_missing(symbol)
+      # TODO Raise a different error if the symbol ends with ! or ?, since then it can't be a tag name
       raise NoSuchTagError.new(symbol)
     end
   end
