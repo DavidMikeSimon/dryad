@@ -44,4 +44,14 @@ class DryadTest < Test::Unit::TestCase
       end
     end
   end
+
+  def test_nested_tags
+    assert_dryad_output "<foo><narf>bork</narf></foo>" do
+      tag! :foo do
+        tag! :narf do
+          raw_text! "bork"
+        end
+      end
+    end
+  end
 end
