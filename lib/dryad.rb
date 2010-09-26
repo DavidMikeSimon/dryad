@@ -32,11 +32,14 @@ module Dryad
       @io = io
     end
 
-    def raw_text!(text)
-      @io.write(text)
+    def raw_text!(str)
+      @io.write str
     end
 
-    # TODO Add a text! method that escapes its input
+    # TODO Make this method escape its input 
+    def text!(str)
+      raw_text! str
+    end
 
     def raw_tag!(sym, params = {}, &block)
       param_str = ""

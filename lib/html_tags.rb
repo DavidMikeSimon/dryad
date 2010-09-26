@@ -1,4 +1,9 @@
-module HtmlTags
+module HtmlTags 
+  # Convenience tag: v is for "view", by default it just displays the given thing as a string
+  def v(str = "")
+    text! str.to_s
+  end
+
   def html(&block)
     raw_tag! :html, &block
   end

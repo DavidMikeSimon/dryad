@@ -10,14 +10,11 @@ class HtmlTest < Test::Unit::TestCase
       html do
         body do
           p do
-            raw_text! "Hello "
-            b do
-              raw_text! "world!"
-            end
+            v("Hello "); b{v("world!")}
           end
           hr
           p do
-            raw_text! "I am a banana!"
+            v("I am a banana!")
           end
         end
       end
