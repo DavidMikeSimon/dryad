@@ -3,8 +3,6 @@ class Dryad
     builder = DryadDocumentBuilder.new
     return builder.send(:run!, &block)
   end
-
-  private
 end
 
 class DryadDocumentBuilder
@@ -16,9 +14,15 @@ class DryadDocumentBuilder
     @stack.last.push(text.strip)
   end
 
+  # TODO Add a text! method that escapes its input
+
   def tag!(sym, params = {})
+    # TODO In paranoid mode, check if tag is valid
+
     param_str = ""
     if params.size > 0
+      # TODO In paranoid mode, check if key is valid
+      # TODO Escape values
       param_str = " " + params.map{|k,v| "#{k}=\"#{v}\""}.join(" ")
     end
 
