@@ -1,0 +1,4 @@
+- Allow optional use of a paranoid mode which:
+  - Makes sure all attribute keys are valid in XML
+  - Makes sure all tags are valid in XML
+  - Does not cause a performance hit if not in use (use OOP, not lots of ifs)
