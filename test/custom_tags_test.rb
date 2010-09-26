@@ -58,4 +58,26 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
   end
+
+  def test_insertion
+    @taglib.add do
+      def foo(&block)
+        raw_tag! :bar, &block
+      end
+    end
+
+    assert_output "<bar>BEFOREnarfAFTER</bar>", @taglib do
+      def foo(&block)
+        super do
+          raw_text! "BEFORE"
+          block.call
+          raw_text! "AFTER"
+        end
+      end
+
+      foo do
+        raw_text! "narf"
+      end
+    end
+  end
 end
