@@ -4,8 +4,9 @@ module Dryad
   class TagLibrary
     def initialize
       @tag_def_blocks = []
+      add_module DefaultTags
     end
-
+    
     def output(target, &block)
       builder = DocumentBuilder.new(target)
       @tag_def_blocks.each do |b|
@@ -24,6 +25,15 @@ module Dryad
 
     def add_module(tag_module)
       @tag_def_blocks.push proc { extend tag_module }
+    end
+
+    private
+ 
+    module DefaultTags
+      # V is for "view", by default it just displays the given thing as a string
+      def v(str = "")
+        text! str.to_s
+      end
     end
   end
 

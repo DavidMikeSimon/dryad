@@ -3,6 +3,7 @@
   - Makes sure all tags are valid in XML
   - In the HTML taglib, checks attributes for tag-specific validity
   - Throws an error if a tag that does not accept a block is given one
+  - Throws an error if a tag that accepts a block is given one but never calls it
   - Disallows tag definitions that end with question marks or bangs or mask built-in methods
   - Does not cause a performance hit if not in use (use OOP, not lots of ifs)
 - NoSuchTagError should suggest similarly-named tags to counteract spelling errors

@@ -10,11 +10,11 @@ class HtmlTest < Test::Unit::TestCase
       html do
         body do
           p do
-            v("Hello "); b{v("world!")}
+            v"Hello "; b{v"world!"}
           end
           hr
           p do
-            v("I am a banana!")
+            v"I am a banana!"
           end
         end
       end
