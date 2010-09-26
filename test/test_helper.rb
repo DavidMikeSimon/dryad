@@ -7,12 +7,7 @@ rescue LoadError
 end
 
 class Test::Unit::TestCase
-  def setup
-    @taglib = Dryad::TagLibrary.new
-  end
-  
-  def assert_dryad_output(output, &block)
-    result = @taglib.build_document(&block)
-    assert_equal output, result
+  def assert_output(expected_output, taglib, &block)
+    assert_equal expected_output, taglib.output(&block)
   end
 end

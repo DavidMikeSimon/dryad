@@ -6,7 +6,7 @@ module Dryad
       @tag_defs = {}
     end
 
-    def build_document(&block)
+    def output(&block)
       builder = DocumentBuilder.new(self)
       return builder.send(:run!, &block)
     end
@@ -34,7 +34,7 @@ module Dryad
       @argument_stack.pop
     end
 
-    def content_arg!
+    def content_block!
       return @argument_stack.last.block
     end
 
