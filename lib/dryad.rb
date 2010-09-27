@@ -46,11 +46,6 @@ module Dryad
       @io.write str
     end
 
-    # TODO Make this method escape its input 
-    def text!(str)
-      raw_text! str
-    end
-
     def raw_tag!(sym, params = {}, &block)
       param_str = ""
       if params.size > 0
@@ -65,6 +60,11 @@ module Dryad
       else
         raw_text! "<#{sym.to_s}#{param_str}/>"
       end
+    end
+
+    # TODO Make this method escape its input 
+    def text!(str)
+      raw_text! str
     end
 
     private
