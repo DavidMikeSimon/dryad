@@ -52,4 +52,24 @@ class CustomTagsTest < Test::Unit::TestCase
       foo :x => "y"
     end
   end
+
+  def test_temporary_redefinition
+    @taglib.add do
+      def foo
+        raw_tag! :bar
+      end
+    end
+
+    assert_output '<bar/><narf/><bar/>', @taglib do
+      run! do
+        foo
+        def foo
+          raw_tag! :narf
+        end
+        foo
+      end
+
+      foo
+    end
+  end
 end
