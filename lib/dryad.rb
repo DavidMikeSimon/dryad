@@ -7,13 +7,13 @@ module Dryad
       @tag_def_blocks = []
       add_module DefaultTags
     end
-    
+ 
     def output(target, &block)
       builder = DocumentBuilder.new(target)
       @tag_def_blocks.each do |b|
         builder.instance_eval &b
       end
-      builder.send(:run!, &block)
+      builder.run! &block
     end
 
     def add(&block)
@@ -24,8 +24,8 @@ module Dryad
       end
     end
 
-    def add_module(tag_module)
-      @tag_def_blocks.push proc { extend tag_module }
+    def add_package(tag_package)
+      @tag_def_blocks.push proc { extend tag_package }
     end
   end
 
@@ -59,12 +59,12 @@ module Dryad
       raw_text! str
     end
 
-    private
-
     def run!(&block)
-      # Cloning so that tags redefined in block can 'super' back to the original
+      # Cloning so that tags redefined in block can 'super' back to the original, then go back to earlier state
       self.clone.instance_eval(&block)
     end
+
+    private
 
     def method_missing(symbol)
       # TODO Raise a different error if the symbol ends with ! or ? or =, since then it can't be a tag name
