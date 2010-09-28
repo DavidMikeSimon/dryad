@@ -43,7 +43,7 @@ class CustomTagsTest < Test::Unit::TestCase
 
   def test_attributes_passthru
     @taglib.add do
-      def foo(attributes)
+      def foo
         raw_tag! :bar, attributes
       end
     end
@@ -75,14 +75,14 @@ class CustomTagsTest < Test::Unit::TestCase
 
   def test_class_concatenation
     @taglib.add do
-      def bar(subject, args = {})
-        raw_tag! :bar, args + {:class => "a"} do
+      def bar(subject)
+        raw_tag! :bar, attributes + {:class => "a"} do
           v subject
         end
       end
       
-      def foo(args = {})
-        bar "narf", args + {:class => "b"}
+      def foo
+        bar "narf", attributes + {:class => "b"}
       end
     end
 

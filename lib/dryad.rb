@@ -28,6 +28,7 @@ module Dryad
   class DocumentBuilder
     def initialize(io)
       @io = io
+      @attrs_stack = []
     end
 
     def raw_text!(str)
@@ -60,6 +61,10 @@ module Dryad
       self.clone.instance_eval(&block)
     end
 
+    def attributes
+      @attrs_stack.last or AttributesHash.new
+    end
+
     private
 
     class AttributesHash < Hash
@@ -73,7 +78,7 @@ module Dryad
 
       def merge!(other_hash)
         other_hash.each do |k,v|
-          if k == :class
+          if k == :class and self.has_key?(k)
             self[k] = self[k] + " #{v}"
           else
             self[k] = v
@@ -99,13 +104,23 @@ module Dryad
       # We need to use this technique reach the wrapped method from here, super won't work without cloning
       sc = lambda { class << self; self; end }.call
       wrapped_method = sc.instance_method(symbol).bind(self)
-
-      # This method takes optional arguments, so assume it takes a hash of parameters at the end
+      
       sc.send(:define_method, symbol) do |*args, &block|
-        if (args.last.instance_of?(Hash))
-          args[-1] = AttributesHash.new(args.last)
+        new_args = []
+        attrs = nil
+        while args.size > 0
+          arg = args.shift
+          if arg.is_a?(Hash)
+            attrs = AttributesHash.new if attrs.nil?
+            attrs.merge!(arg)
+          else
+            new_args.push arg
+          end
         end
-        wrapped_method.call(*args, &block)
+
+        @attrs_stack.push(attrs) if attrs
+        wrapped_method.call(*new_args, &block)
+        @attrs_stack.pop if attrs
       end
 
       @method_being_wrapped = false
