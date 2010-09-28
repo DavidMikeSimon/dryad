@@ -1,25 +1,25 @@
 module Dryad
-  module HtmlTags 
-    def html(&block)
-      raw_tag! :html, &block
+  HtmlTags = proc do
+    def html(args = {}, &block)
+      raw_tag! :html, args, &block
     end
 
-    def body(params = {}, &block)
-      raw_tag! :body, params, &block
+    def body(args = {}, &block)
+      raw_tag! :body, args, &block
     end
 
-    def p(params = {}, &block)
-      block ||= proc { v(params) }
-      raw_tag! :p, {}, &block
+    def p(subject = nil, args = {}, &block)
+      block ||= proc { v subject }
+      raw_tag! :p, args, &block
     end
 
-    def b(params = {}, &block)
-      block ||= proc { v(params) }
-      raw_tag! :b, {}, &block
+    def b(subject = nil, args = {}, &block)
+      block ||= proc { v subject }
+      raw_tag! :b, args, &block
     end
 
-    def hr(params = {})
-      raw_tag! :hr, params
+    def hr(args = {})
+      raw_tag! :hr, args
     end
   end
 end

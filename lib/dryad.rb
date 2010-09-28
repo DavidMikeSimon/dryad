@@ -5,7 +5,7 @@ module Dryad
   class TagLibrary
     def initialize
       @tag_def_blocks = []
-      add_module DefaultTags
+      add &DefaultTags
     end
  
     def output(target, &block)
@@ -22,10 +22,6 @@ module Dryad
       else
         raise DryadError.new("TagLibrary.add must be given a block")
       end
-    end
-
-    def add_package(tag_package)
-      @tag_def_blocks.push proc { extend tag_package }
     end
   end
 
@@ -65,6 +61,20 @@ module Dryad
     end
 
     private
+
+    def singleton_method_added(symbol)
+      return if @method_being_wrapped # Otherwise we'll try to wrap the wrapper recursively
+      @method_being_wrapped = true
+
+      # This is a way of getting around being unable to use 'super' to reach the original definition from here
+      sc = lambda { class << self; self; end }.call
+      method = sc.instance_method(symbol).bind(self)
+      sc.send(:define_method, symbol) do |*args, &block|
+        method.call(*args, &block)
+      end
+
+      @method_being_wrapped = false
+    end
 
     def method_missing(symbol)
       # TODO Raise a different error if the symbol ends with ! or ? or =, since then it can't be a tag name
