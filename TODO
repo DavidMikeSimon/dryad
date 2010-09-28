@@ -7,3 +7,7 @@
   - Disallows tag definitions that end with question marks or bangs or mask built-in methods
   - Does not cause a performance hit if not in use (use OOP, not lots of ifs)
 - NoSuchTagError should suggest similarly-named tags to counteract spelling errors
+- In order to allow similar behavior to dryml's prepend/append, maybe tag definitions must always consist of a single
+  tag given a block
+  - Should v then become a span? Or should it be made a special case?
+  - Probably better to make the whole idea a special case, but that makes me unhappy :-\

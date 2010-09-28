@@ -69,13 +69,13 @@ module Dryad
 
     private
 
-    def run!(input_source = nil, &block)
+    def run!(&block)
       # Cloning so that tags redefined in block can 'super' back to the original
       self.clone.instance_eval(&block)
     end
 
     def method_missing(symbol)
-      # TODO Raise a different error if the symbol ends with ! or ?, since then it can't be a tag name
+      # TODO Raise a different error if the symbol ends with ! or ? or =, since then it can't be a tag name
       raise NoSuchTagError.new(symbol)
     end
   end
