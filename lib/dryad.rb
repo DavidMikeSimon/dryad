@@ -62,15 +62,50 @@ module Dryad
 
     private
 
+    class AttributesHash < Hash
+      def initialize(orig_hash = nil)
+        replace(orig_hash) if orig_hash
+      end
+      
+      def +(other_hash)
+        return merge(other_hash)
+      end
+
+      def merge!(other_hash)
+        other_hash.each do |k,v|
+          if k == :class
+            self[k] = self[k] + " #{v}"
+          else
+            self[k] = v
+          end
+        end
+      end
+
+      def update(other_hash)
+        merge!(other_hash)
+      end
+
+      def merge(other_hash)
+        c = self.clone
+        c.merge!(other_hash)
+        return c
+      end
+    end
+
     def singleton_method_added(symbol)
       return if @method_being_wrapped # Otherwise we'll try to wrap the wrapper recursively
       @method_being_wrapped = true
 
-      # This is a way of getting around being unable to use 'super' to reach the original definition from here
+      # We need to use this technique reach the wrapped method from here, super won't work without cloning
       sc = lambda { class << self; self; end }.call
-      method = sc.instance_method(symbol).bind(self)
+      wrapped_method = sc.instance_method(symbol).bind(self)
+
+      # This method takes optional arguments, so assume it takes a hash of parameters at the end
       sc.send(:define_method, symbol) do |*args, &block|
-        method.call(*args, &block)
+        if (args.last.instance_of?(Hash))
+          args[-1] = AttributesHash.new(args.last)
+        end
+        wrapped_method.call(*args, &block)
       end
 
       @method_being_wrapped = false
