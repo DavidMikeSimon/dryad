@@ -1,3 +1,4 @@
+require 'default_tags'
 require 'exceptions'
 
 module Dryad
@@ -25,15 +26,6 @@ module Dryad
 
     def add_module(tag_module)
       @tag_def_blocks.push proc { extend tag_module }
-    end
-
-    private
- 
-    module DefaultTags
-      # V is for "view", by default it just displays the given thing as a string
-      def v(str = "")
-        text! str.to_s
-      end
     end
   end
 

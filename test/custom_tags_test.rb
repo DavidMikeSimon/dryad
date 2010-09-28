@@ -41,6 +41,18 @@ class CustomTagsTest < Test::Unit::TestCase
     end
   end
 
+  def test_attributes_passthru
+    @taglib.add do
+      def foo
+        raw_tag! :bar, attributes
+      end
+    end
+
+    assert_output '<bar x="y">', @taglib do
+      foo :x => "y"
+    end
+  end
+
   module MyCustomTags
     def foo(&block)
       raw_tag! :bar, &block
