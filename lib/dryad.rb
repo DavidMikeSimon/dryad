@@ -104,7 +104,7 @@ module Dryad
       # We need to use this technique reach the wrapped method from here, super won't work without cloning
       sc = lambda { class << self; self; end }.call
       wrapped_method = sc.instance_method(symbol).bind(self)
-      
+
       sc.send(:define_method, symbol) do |*args, &block|
         new_args = []
         attrs = nil
@@ -126,7 +126,7 @@ module Dryad
       @method_being_wrapped = false
     end
 
-    def method_missing(symbol)
+    def method_missing(symbol, *args)
       # TODO Raise a different error if the symbol ends with ! or ? or =, since then it can't be a tag name
       raise NoSuchTagError.new(symbol)
     end
