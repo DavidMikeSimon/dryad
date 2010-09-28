@@ -43,12 +43,12 @@ class CustomTagsTest < Test::Unit::TestCase
 
   def test_attributes_passthru
     @taglib.add do
-      def foo
+      def foo(attributes)
         raw_tag! :bar, attributes
       end
     end
 
-    assert_output '<bar x="y">', @taglib do
+    assert_output '<bar x="y"/>', @taglib do
       foo :x => "y"
     end
   end
