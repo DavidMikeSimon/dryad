@@ -73,6 +73,44 @@ class CustomTagsTest < Test::Unit::TestCase
     end
   end
 
+  def test_permanent_redefinition
+    @taglib.add do
+      def foo
+        raw_tag! :bar
+      end
+    end
+    
+    @taglib.add do
+      def foo
+        raw_tag! :blork
+      end
+    end
+
+    assert_output '<blork/>', @taglib do
+      foo
+    end
+  end
+
+  def test_redef_with_super
+    @taglib.add do
+      def foo
+        raw_tag! :bar
+      end
+    end
+
+    @taglib.add do
+      def foo
+        raw_tag! :zarf do
+          super
+        end
+      end
+    end
+
+    assert_output '<zarf><bar/></zarf>', @taglib do
+      foo
+    end
+  end
+
   def test_class_concatenation
     @taglib.add do
       def bar(subject)
