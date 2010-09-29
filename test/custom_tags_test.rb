@@ -73,6 +73,32 @@ class CustomTagsTest < Test::Unit::TestCase
     end
   end
 
+  def test_nested_temporary_redefinition
+    @taglib.add do
+      def foo
+        raw_tag! :bar
+      end
+
+      def xyz
+        raw_tag! :xyz do
+          foo
+        end
+      end
+    end
+
+    assert_output '<xyz><bar/></xyz><xyz><narf/></xyz><xyz><bar/></xyz>', @taglib do
+      run! do
+        xyz
+        def foo
+          raw_tag! :narf
+        end
+        xyz
+      end
+
+      xyz
+    end
+  end
+
   def test_permanent_redefinition
     @taglib.add do
       def foo
