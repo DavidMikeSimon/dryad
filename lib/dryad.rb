@@ -11,7 +11,7 @@ module Dryad
     def output(target, &block)
       builder = DocumentBuilder.new(target)
       @tag_def_blocks.each do |b|
-        builder = builder.clone
+        builder = builder.send(:permanent_clone)
         builder.instance_eval &b
       end
       builder.run! &block
@@ -30,6 +30,7 @@ module Dryad
     def initialize(io)
       @io = io
       @attrs_stack = []
+      @clones_stack = [self]
     end
 
     def raw_text!(str)
@@ -57,9 +58,20 @@ module Dryad
       raw_text! str
     end
 
+    # Runs the given code in a new sub-context
+    # This lets you safely redefine methods inside the block; they'll be restored afterwords
     def run!(&block)
-      # Cloning so that tags redefined in block can 'super' back to the original, then go back to earlier state
-      self.clone.instance_eval(&block)
+      if @clones_stack.last != self
+        @clones_stack.last.run!(&block)
+      else
+        c = clone
+        @clones_stack.push(c)
+        begin
+          c.instance_eval &block
+        ensure
+          @clones_stack.pop
+        end
+      end
     end
 
     def attributes
@@ -67,6 +79,18 @@ module Dryad
     end
 
     private
+
+    def permanent_clone
+      # Called permanent because this clone needs to exist for as long as any clones of this DocumentBuilder are in use
+      c = clone
+      @clones_stack.push(c)
+      return c
+    end
+
+    # TODO: Check against AttributesHash pollution
+    def clone
+      super
+    end
 
     class AttributesHash < Hash
       def initialize(orig_hash = nil)
@@ -108,21 +132,26 @@ module Dryad
 
       # Define a wrapper method that mediates input to the actual tag method
       sc.send(:define_method, symbol) do |*args, &block|
-        new_args = []
-        attrs = nil
-        while args.size > 0
-          arg = args.shift
-          if arg.is_a?(Hash)
-            attrs = AttributesHash.new if attrs.nil?
-            attrs.merge!(arg)
-          else
-            new_args.push arg
+        run! do # The major advatange of using run! here is that if we're not at the top of the clone stack, it moves us there
+          new_args = []
+          attrs = nil
+          while args.size > 0
+            arg = args.shift
+            if arg.is_a?(Hash)
+              attrs = AttributesHash.new if attrs.nil?
+              attrs.merge!(arg)
+            else
+              new_args.push arg
+            end
+          end
+
+          @attrs_stack.push(attrs) if attrs
+          begin
+            wrapped_method.call(*new_args, &block)
+          ensure
+            @attrs_stack.pop if attrs
           end
         end
-
-        @attrs_stack.push(attrs) if attrs
-        wrapped_method.call(*new_args, &block)
-        @attrs_stack.pop if attrs
       end
 
       @method_being_wrapped = false
