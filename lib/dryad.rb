@@ -42,8 +42,7 @@ module Dryad
     def raw_tag!(sym, params = {}, &block)
       param_str = ""
       if params.size > 0
-        # TODO Escape values
-        param_str = " " + params.map{|k,v| "#{k}=\"#{v}\""}.join(" ")
+        param_str = " " + params.map{|k,v| "#{k}=\"#{CGI::escapeHTML(v)}\""}.join(" ")
       end
 
       if block

@@ -67,4 +67,10 @@ class SimpleTagsTest < Test::Unit::TestCase
       text! "One < two"
     end
   end
+
+  def test_attribute_escaping
+    assert_output '<foo bar="Joe said &quot;hi&quot;"/>', @taglib do
+      raw_tag! :foo, :bar => 'Joe said "hi"'
+    end
+  end
 end
