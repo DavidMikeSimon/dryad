@@ -1,3 +1,6 @@
+require 'ftools'
+$: << File.join(File.dirname($0), "..", "lib")
+
 require 'dryad'
 require 'rubygems'
 require 'stringio'
