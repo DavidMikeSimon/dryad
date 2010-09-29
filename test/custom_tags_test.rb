@@ -91,6 +91,30 @@ class CustomTagsTest < Test::Unit::TestCase
     end
   end
 
+  def test_nested_redef
+    @taglib.add do
+      def foo
+        raw_tag! :bar
+      end
+
+      def xyz(&block)
+        raw_tag! :xyz, &block
+      end
+    end
+
+    @taglib.add do
+      def foo
+        raw_tag! :zarf
+      end
+    end
+
+    assert_output '<xyz><zarf/></xyz>', @taglib do
+      xyz do
+        foo
+      end
+    end
+  end
+
   def test_redef_with_super
     @taglib.add do
       def foo

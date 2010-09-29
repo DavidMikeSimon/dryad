@@ -11,6 +11,7 @@ module Dryad
     def output(target, &block)
       builder = DocumentBuilder.new(target)
       @tag_def_blocks.each do |b|
+        builder = builder.clone
         builder.instance_eval &b
       end
       builder.run! &block
@@ -105,6 +106,7 @@ module Dryad
       sc = lambda { class << self; self; end }.call
       wrapped_method = sc.instance_method(symbol).bind(self)
 
+      # Define a wrapper method that mediates input to the actual tag method
       sc.send(:define_method, symbol) do |*args, &block|
         new_args = []
         attrs = nil

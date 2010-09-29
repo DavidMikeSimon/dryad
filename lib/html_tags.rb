@@ -12,7 +12,7 @@ module Dryad
       block ||= proc { v subject }
       raw_tag! :p, attributes, &block
     end
-
+    
     def b(subject = nil, &block)
       block ||= proc { v subject }
       raw_tag! :b, attributes, &block
