@@ -1,3 +1,5 @@
+require 'cgi'
+
 require 'default_tags'
 require 'exceptions'
 
@@ -53,9 +55,8 @@ module Dryad
       end
     end
 
-    # TODO Make this method escape its input 
     def text!(str)
-      raw_text! str
+      raw_text! CGI::escapeHTML(str)
     end
 
     # Runs the given code in a new sub-context

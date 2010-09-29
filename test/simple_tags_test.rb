@@ -1,4 +1,5 @@
 require 'test/test_helper'
+require 'cgi'
 
 class SimpleTagsTest < Test::Unit::TestCase
   def setup
@@ -59,5 +60,11 @@ class SimpleTagsTest < Test::Unit::TestCase
       raw_tag! :bar
     end
     assert_equal "<foo/><bar/>", sio.string
+  end
+
+  def test_text_escaping
+    assert_output 'One &lt; two', @taglib do
+      text! "One < two"
+    end
   end
 end
