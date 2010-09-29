@@ -9,7 +9,7 @@ class CustomTagsTest < Test::Unit::TestCase
   def test_simple_tag_def
     @taglib.add do
       def foo
-        raw_tag! :bar
+        raw_tag :bar
       end
     end
 
@@ -30,7 +30,7 @@ class CustomTagsTest < Test::Unit::TestCase
   def test_block_passthru
     @taglib.add do
       def foo(&block)
-        raw_tag! :bar, &block
+        raw_tag :bar, &block
       end
     end
      
@@ -44,7 +44,7 @@ class CustomTagsTest < Test::Unit::TestCase
   def test_attributes_passthru
     @taglib.add do
       def foo
-        raw_tag! :bar, attributes
+        raw_tag :bar, attributes
       end
     end
 
@@ -56,7 +56,7 @@ class CustomTagsTest < Test::Unit::TestCase
   def test_temporary_redefinition
     @taglib.add do
       def foo
-        raw_tag! :bar
+        raw_tag :bar
       end
     end
 
@@ -64,7 +64,7 @@ class CustomTagsTest < Test::Unit::TestCase
       run! do
         foo
         def foo
-          raw_tag! :narf
+          raw_tag :narf
         end
         foo
       end
@@ -76,11 +76,11 @@ class CustomTagsTest < Test::Unit::TestCase
   def test_nested_temporary_redefinition
     @taglib.add do
       def foo
-        raw_tag! :bar
+        raw_tag :bar
       end
 
       def xyz
-        raw_tag! :xyz do
+        raw_tag :xyz do
           foo
         end
       end
@@ -90,7 +90,7 @@ class CustomTagsTest < Test::Unit::TestCase
       run! do
         xyz
         def foo
-          raw_tag! :narf
+          raw_tag :narf
         end
         xyz
       end
@@ -102,13 +102,13 @@ class CustomTagsTest < Test::Unit::TestCase
   def test_permanent_redefinition
     @taglib.add do
       def foo
-        raw_tag! :bar
+        raw_tag :bar
       end
     end
     
     @taglib.add do
       def foo
-        raw_tag! :blork
+        raw_tag :blork
       end
     end
 
@@ -120,17 +120,17 @@ class CustomTagsTest < Test::Unit::TestCase
   def test_nested_redef
     @taglib.add do
       def foo
-        raw_tag! :bar
+        raw_tag :bar
       end
 
       def xyz(&block)
-        raw_tag! :xyz, &block
+        raw_tag :xyz, &block
       end
     end
 
     @taglib.add do
       def foo
-        raw_tag! :zarf
+        raw_tag :zarf
       end
     end
 
@@ -144,13 +144,13 @@ class CustomTagsTest < Test::Unit::TestCase
   def test_redef_with_super
     @taglib.add do
       def foo
-        raw_tag! :bar
+        raw_tag :bar
       end
     end
 
     @taglib.add do
       def foo
-        raw_tag! :zarf do
+        raw_tag :zarf do
           super
         end
       end
@@ -164,7 +164,7 @@ class CustomTagsTest < Test::Unit::TestCase
   def test_class_concatenation
     @taglib.add do
       def bar(subject)
-        raw_tag! :bar, attributes + {:class => "a"} do
+        raw_tag :bar, attributes + {:class => "a"} do
           v subject
         end
       end

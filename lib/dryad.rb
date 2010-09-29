@@ -39,21 +39,6 @@ module Dryad
       @io.write str
     end
 
-    def raw_tag!(sym, params = {}, &block)
-      param_str = ""
-      if params.size > 0
-        param_str = " " + params.map{|k,v| "#{k}=\"#{CGI::escapeHTML(v)}\""}.join(" ")
-      end
-
-      if block
-        raw_text! "<#{sym.to_s}#{param_str}>"
-        run! &block
-        raw_text! "</#{sym.to_s}>"
-      else
-        raw_text! "<#{sym.to_s}#{param_str}/>"
-      end
-    end
-
     def text!(str)
       raw_text! CGI::escapeHTML(str)
     end
@@ -134,22 +119,23 @@ module Dryad
       sc.send(:define_method, symbol) do |*args, &block|
         run! do # The major advatange of using run! here is that if we're not at the top of the clone stack, it moves us there
           new_args = []
-          attrs = nil
+          attrs = AttributesHash.new
           while args.size > 0
             arg = args.shift
             if arg.is_a?(Hash)
-              attrs = AttributesHash.new if attrs.nil?
-              attrs.merge!(arg)
+              attrs.merge! arg 
+            elsif arg.is_a?(Symbol) and arg.to_s[arg.to_s.length-1,1] == "!"
+              attrs.merge!({:class => arg.to_s.chop})
             else
               new_args.push arg
             end
           end
 
-          @attrs_stack.push(attrs) if attrs
+          @attrs_stack.push(attrs)
           begin
             wrapped_method.call(*new_args, &block)
           ensure
-            @attrs_stack.pop if attrs
+            @attrs_stack.pop
           end
         end
       end
