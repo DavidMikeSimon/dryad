@@ -59,7 +59,7 @@ module Dryad
 
           message = e.message
           suggestions = []
-          self.methods.each do |m|
+          self.methods.reject{|m| Object.methods.include?(m)}.each do |m|
             got_match = false
             DocumentBuilder::string_to_semis(m).each do |m_semi|
               invalid_semis.each do |i_semi|

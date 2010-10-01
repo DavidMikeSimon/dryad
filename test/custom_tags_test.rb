@@ -190,5 +190,6 @@ class CustomTagsTest < Test::Unit::TestCase
     assert_kind_of NameError, exception
     assert_equal :duk, exception.name
     assert_match /\nPerhaps you meant one of these methods:\n duck\n duke/, exception.message
+    assert_no_match /\bdup\b/, exception.message # Doesn't suggest common Object methods
   end
 end
