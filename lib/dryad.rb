@@ -1,5 +1,3 @@
-require 'cgi'
-
 require 'default_tags'
 require 'exceptions'
 
@@ -39,10 +37,6 @@ module Dryad
       @io.write str
     end
 
-    def text!(str)
-      raw_text! CGI::escapeHTML(str)
-    end
-
     # Runs the given code in a new sub-context
     # This lets you safely redefine methods inside the block; they'll be restored afterwords
     def run!(&block)
@@ -55,31 +49,33 @@ module Dryad
           c.instance_eval &block
         rescue NameError => e
           # Find any methods that are only one character off from the given incorrect method
-          invalid_semis = DocumentBuilder::string_to_semis(e.name.to_s)
-
           message = e.message
-          suggestions = []
-          self.methods.reject{|m| Object.methods.include?(m)}.each do |m|
-            got_match = false
-            DocumentBuilder::string_to_semis(m).each do |m_semi|
-              invalid_semis.each do |i_semi|
-                if m_semi == i_semi
-                  suggestions << m
-                  got_match = true
-                  break
+
+          unless message.include?("Perhaps you meant")
+            invalid_semis = DocumentBuilder::string_to_semis(e.name.to_s)
+            suggestions = []
+            self.methods.reject{|m| Object.methods.include?(m)}.each do |m|
+              got_match = false
+              DocumentBuilder::string_to_semis(m).each do |m_semi|
+                invalid_semis.each do |i_semi|
+                  if m_semi == i_semi
+                    suggestions << m
+                    got_match = true
+                    break
+                  end
                 end
+                break if got_match
               end
-              break if got_match
+            end
+
+            if suggestions.size > 0
+              suggestions.sort!
+              message << "\nPerhaps you meant one of these methods:\n "
+              message << suggestions.join("\n ")
             end
           end
 
-          if suggestions.size > 0
-            suggestions.sort!
-            message << "\nPerhaps you meant one of these methods:\n "
-            message << suggestions.join("\n ")
-          end
-          
-          raise NameError.new(message, e.name)
+          raise NameError.new(nil, e.name), message, $@
         ensure
           @clones_stack.pop
         end

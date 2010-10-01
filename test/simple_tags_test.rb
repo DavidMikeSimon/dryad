@@ -64,7 +64,7 @@ class SimpleTagsTest < Test::Unit::TestCase
 
   def test_text_escaping
     assert_output 'One &lt; two', @taglib do
-      text! "One < two"
+      text "One < two"
     end
   end
 

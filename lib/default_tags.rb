@@ -17,10 +17,14 @@ module Dryad
         raw_text! "<#{sym.to_s}#{attr_str}/>"
       end
     end
-    
+
+    def text(str)
+      raw_text! CGI::escapeHTML(str)
+    end
+
     # V is for "view", by default it just displays the given thing as a string
     def v(subject)
-      text! subject.to_s
+      text subject.to_s
     end
   end
 end
