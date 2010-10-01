@@ -6,8 +6,4 @@
   - Does not cause a performance hit if not in use (use OOP, not lots of ifs)
   - Flag attempts to use tag return values with helpful error messages
 - Add methods like dryml's before, after, prepend, append stuff, which check against tag name and class
-- Don't have tag definitions take arguments anymore; have them retrieve stuff via methods in DocumentBuilder
-  - Implies that tag definitions can't be done with regular "def" anymore
-- Add a specialize method that takes a tag name and block, letting you do a one-time derivation of that tag and output
-  it right away
 - Have all tags return nil (so that attempts to use tag return values cause errors)

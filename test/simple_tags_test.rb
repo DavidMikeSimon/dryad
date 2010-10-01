@@ -9,7 +9,7 @@ class SimpleTagsTest < Test::Unit::TestCase
   def test_very_simple_raw_tag
     assert_output "<foo>Bar</foo>", @taglib do
       raw_tag :foo do
-        raw_text! "Bar"
+        v"Bar"
       end
     end
   end
@@ -23,8 +23,8 @@ class SimpleTagsTest < Test::Unit::TestCase
   def test_simple_concatenation
     assert_output "<foo>xyzzy</foo>", @taglib do
       raw_tag :foo do
-        raw_text! "xy"
-        raw_text! "zzy"
+        v"xy"
+        v"zzy"
       end
     end
   end
@@ -33,7 +33,7 @@ class SimpleTagsTest < Test::Unit::TestCase
     assert_output "<foo><narf>bork</narf></foo>", @taglib do
       raw_tag :foo do
         raw_tag :narf do
-          raw_text! "bork"
+          v"bork"
         end
       end
     end
@@ -42,7 +42,7 @@ class SimpleTagsTest < Test::Unit::TestCase
   def test_attributes
     assert_output '<foo x="y">bork</foo>', @taglib do
       raw_tag :foo, :x => "y" do
-        raw_text! "bork"
+        v"bork"
       end
     end
 
@@ -64,7 +64,7 @@ class SimpleTagsTest < Test::Unit::TestCase
 
   def test_text_escaping
     assert_output 'One &lt; two', @taglib do
-      text "One < two"
+      v"One < two"
     end
   end
 

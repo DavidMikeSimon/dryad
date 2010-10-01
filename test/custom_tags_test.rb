@@ -27,7 +27,7 @@ class CustomTagsTest < Test::Unit::TestCase
      
     assert_output "<bar>narf</bar>", @taglib do
       foo do
-        raw_text! "narf"
+        v"narf"
       end
     end
   end
