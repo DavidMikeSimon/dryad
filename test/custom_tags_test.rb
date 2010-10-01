@@ -18,15 +18,6 @@ class CustomTagsTest < Test::Unit::TestCase
     end
   end
 
-  def test_invalid_tag
-    assert_raise Dryad::NoSuchTagError do
-      sio = StringIO.new
-      @taglib.output sio do
-        foobar
-      end
-    end
-  end
-
   def test_block_passthru
     @taglib.add do
       def foo(&block)
@@ -175,7 +166,29 @@ class CustomTagsTest < Test::Unit::TestCase
     end
 
     assert_output '<bar class="c b a">narf</bar>', @taglib do
-      foo(:class => "c")
+      foo :class => "c"
     end
+  end
+
+  def test_name_error_suggestion
+    @taglib.add do
+      def duck
+      end
+
+      def duke
+      end
+    end
+
+    exception = nil
+    begin
+      @taglib.output StringIO.new do
+        duk # Whoops, a spelling error
+      end
+    rescue NameError => e
+      exception = e
+    end
+    assert_kind_of NameError, exception
+    assert_equal :duk, exception.name
+    assert_match /\nPerhaps you meant one of these methods:\n duck\n duke/, exception.message
   end
 end
