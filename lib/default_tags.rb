@@ -11,7 +11,7 @@ module Dryad
 
       if block
         raw_text! "<#{sym.to_s}#{attr_str}>"
-        run! &block
+        run &block
         raw_text! "</#{sym.to_s}>"
       else
         raw_text! "<#{sym.to_s}#{attr_str}/>"

@@ -52,7 +52,7 @@ class CustomTagsTest < Test::Unit::TestCase
     end
 
     assert_output '<bar/><narf/><bar/>', @taglib do
-      run! do
+      run do
         foo
         def foo
           raw_tag :narf
@@ -78,7 +78,7 @@ class CustomTagsTest < Test::Unit::TestCase
     end
 
     assert_output '<xyz><bar/></xyz><xyz><narf/></xyz><xyz><bar/></xyz>', @taglib do
-      run! do
+      run do
         xyz
         def foo
           raw_tag :narf

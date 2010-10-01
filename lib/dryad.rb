@@ -14,7 +14,7 @@ module Dryad
         builder = builder.send(:permanent_clone)
         builder.instance_eval &b
       end
-      builder.run! &block
+      builder.run &block
     end
 
     def add(&block)
@@ -39,9 +39,9 @@ module Dryad
 
     # Runs the given code in a new sub-context
     # This lets you safely redefine methods inside the block; they'll be restored afterwords
-    def run!(&block)
+    def run(&block)
       if @clones_stack.last != self
-        @clones_stack.last.run!(&block)
+        @clones_stack.last.run(&block)
       else
         c = clone
         @clones_stack.push(c)
@@ -150,7 +150,7 @@ module Dryad
 
       # Define a wrapper method that mediates input to the actual tag method
       sc.send(:define_method, symbol) do |*args, &block|
-        run! do # The major advatange of using run! here is that if we're not at the top of the clone stack, it moves us there
+        run do # The main purpose of using run here is that if we're not at the top of the clone stack, it moves us there
           new_args = []
           attrs = AttributesHash.new
           while args.size > 0
