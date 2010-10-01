@@ -79,5 +79,17 @@ class SimpleTagsTest < Test::Unit::TestCase
       raw_tag :foo, :blork!, :beeble!
     end
   end
+
+  def test_automatic_iding
+    assert_output '<foo id="bar"/>', @taglib do
+      raw_tag :foo, :bar=
+    end
+  end
+
+  def test_cannot_specify_multiple_auto_ids
+    assert_dryad_raise Dryad::DryadError, @taglib do
+      raw_tag :foo, :bar=, :baz=
+    end
+  end
 end
 

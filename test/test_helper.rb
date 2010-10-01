@@ -16,4 +16,10 @@ class Test::Unit::TestCase
     taglib.output(sio, &block)
     assert_equal expected_output, sio.string
   end
+
+  def assert_dryad_raise(exception, taglib, &block)
+    assert_raise exception do
+      taglib.output(StringIO.new, &block)
+    end
+  end
 end

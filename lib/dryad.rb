@@ -152,22 +152,30 @@ module Dryad
       sc.send(:define_method, symbol) do |*args, &block|
         run do # The main purpose of using run here is that if we're not at the top of the clone stack, it moves us there
           new_args = []
-          auto_class_args = []
+          auto_classes = []
+          auto_id = nil
           attrs = AttributesHash.new
           while args.size > 0
             arg = args.shift
             if arg.is_a?(Hash)
               attrs.merge! arg 
-            elsif arg.is_a?(Symbol) and arg.to_s[arg.to_s.length-1,1] == "!"
-              auto_class_args << arg
+            elsif arg.is_a?(Symbol) and ["!", "="].include?(arg.to_s[-1,1])
+              case arg.to_s[-1,1]
+              when "!"
+                auto_classes << arg.to_s.chop
+              when "="
+                raise DryadError.new("Cannot give multiple automatic id symbols to the same tag") if auto_id
+                auto_id = arg.to_s.chop
+              end
             else
               new_args.push arg
             end
           end
 
-          auto_class_args.each do |arg|
-            attrs.merge!({:class => arg.to_s.chop})
+          auto_classes.each do |c|
+            attrs.merge!({:class => c})
           end
+          attrs[:id] = auto_id if auto_id
 
           @attrs_stack.push(attrs)
           begin
