@@ -169,6 +169,24 @@ class CustomTagsTest < Test::Unit::TestCase
       foo :class => "c"
     end
   end
+  
+  def test_auto_class_concatenation
+    @taglib.add do
+      def bar(subject)
+        raw_tag :bar, :a!, attributes do
+          v subject
+        end
+      end
+      
+      def foo
+        bar "narf", :b!, attributes
+      end
+    end
+
+    assert_output '<bar class="c b a">narf</bar>', @taglib do
+      foo :c!
+    end
+  end
 
   def test_name_error_suggestion
     @taglib.add do

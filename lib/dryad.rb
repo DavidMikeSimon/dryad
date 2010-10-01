@@ -152,16 +152,21 @@ module Dryad
       sc.send(:define_method, symbol) do |*args, &block|
         run do # The main purpose of using run here is that if we're not at the top of the clone stack, it moves us there
           new_args = []
+          auto_class_args = []
           attrs = AttributesHash.new
           while args.size > 0
             arg = args.shift
             if arg.is_a?(Hash)
               attrs.merge! arg 
             elsif arg.is_a?(Symbol) and arg.to_s[arg.to_s.length-1,1] == "!"
-              attrs.merge!({:class => arg.to_s.chop})
+              auto_class_args << arg
             else
               new_args.push arg
             end
+          end
+
+          auto_class_args.each do |arg|
+            attrs.merge!({:class => arg.to_s.chop})
           end
 
           @attrs_stack.push(attrs)
