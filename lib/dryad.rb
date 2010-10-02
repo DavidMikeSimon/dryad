@@ -144,49 +144,55 @@ module Dryad
       return if @method_being_wrapped # Otherwise we'll try to wrap the wrapper recursively
       @method_being_wrapped = true
 
-      # We need to use this technique reach the wrapped method from here, super won't work without cloning
+      # Get the singleton method that was just defined
       sc = lambda { class << self; self; end }.call
       wrapped_method = sc.instance_method(symbol).bind(self)
 
-      # Define a wrapper method that mediates input to the actual tag method
+      # Overwrite it with a wrapper method that calls the original with mediated input
       sc.send(:define_method, symbol) do |*args, &block|
         run do # The main purpose of using run here is that if we're not at the top of the clone stack, it moves us there
-          new_args = []
-          auto_classes = []
-          auto_id = nil
-          attrs = AttributesHash.new
-          while args.size > 0
-            arg = args.shift
-            if arg.is_a?(Hash)
-              attrs.merge! arg 
-            elsif arg.is_a?(Symbol) and ["!", "="].include?(arg.to_s[-1,1])
-              case arg.to_s[-1,1]
-              when "!"
-                auto_classes << arg.to_s.chop
-              when "="
-                raise DryadError.new("Cannot give multiple automatic id symbols to the same tag") if auto_id
-                auto_id = arg.to_s.chop
-              end
-            else
-              new_args.push arg
-            end
-          end
-
-          auto_classes.each do |c|
-            attrs.merge!({:class => c})
-          end
-          attrs[:id] = auto_id if auto_id
-
-          @attrs_stack.push(attrs)
-          begin
+          processing_tag_arguments(args) do |new_args|
             wrapped_method.call(*new_args, &block)
-          ensure
-            @attrs_stack.pop
           end
         end
       end
 
       @method_being_wrapped = false
+    end
+
+    def processing_tag_arguments(args)
+      new_args = []
+      auto_classes = []
+      auto_id = nil
+      attrs = AttributesHash.new
+      while args.size > 0
+        arg = args.shift
+        if arg.is_a?(Hash)
+          attrs.merge! arg 
+        elsif arg.is_a?(Symbol) and ["!", "="].include?(arg.to_s[-1,1])
+          case arg.to_s[-1,1]
+          when "!"
+            auto_classes << arg.to_s.chop
+          when "="
+            raise DryadError.new("Cannot give multiple automatic id symbols to the same tag") if auto_id
+            auto_id = arg.to_s.chop
+          end
+        else
+          new_args.push arg
+        end
+      end
+
+      auto_classes.each do |c|
+        attrs.merge!({:class => c})
+      end
+      attrs[:id] = auto_id if auto_id
+      
+      @attrs_stack.push(attrs)
+      begin
+        yield new_args
+      ensure
+        @attrs_stack.pop
+      end
     end
   end
 end
