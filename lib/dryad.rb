@@ -1,5 +1,6 @@
 require 'default_tags'
 require 'exceptions'
+require 'near_miss_suggestions'
 
 module Dryad
   class TagLibrary
@@ -46,9 +47,9 @@ module Dryad
         c = clone
         @clones_stack.push(c)
         begin
-          suggesting_near_match_methods do
-            c.instance_eval &block
-          end
+          c.instance_eval &block
+        rescue NameError => e
+          NearMissSuggestions::reraise_with_suggestions(e, self)
         ensure
           @clones_stack.pop
         end
@@ -61,16 +62,6 @@ module Dryad
 
     private
 
-    def self.string_to_semis(string)
-      semis = [string]
-      if string.length > 1
-        0.upto(string.length-1) do |i|
-          semis << string[0,i] + string[i+1,string.length]
-        end
-      end
-      return semis
-    end
-
     def permanent_clone
       # Called permanent because this clone needs to exist for as long as any clones of this DocumentBuilder are in use
       c = clone
@@ -78,39 +69,9 @@ module Dryad
       return c
     end
 
-    # TODO: Check against AttributesHash pollution
+    # This makes clone private
     def clone
       super
-    end
-
-    class AttributesHash < Hash
-      def initialize(orig_hash = nil)
-        replace(orig_hash) if orig_hash
-      end
-      
-      def +(other_hash)
-        return merge(other_hash)
-      end
-
-      def merge!(other_hash)
-        other_hash.each do |k,v|
-          if k == :class and self.has_key?(k)
-            self[k] = self[k] + " #{v}"
-          else
-            self[k] = v
-          end
-        end
-      end
-
-      def update(other_hash)
-        merge!(other_hash)
-      end
-
-      def merge(other_hash)
-        c = self.clone
-        c.merge!(other_hash)
-        return c
-      end
     end
 
     def singleton_method_added(symbol)
@@ -131,40 +92,6 @@ module Dryad
       end
 
       @method_being_wrapped = false
-    end
-
-    def suggesting_near_match_methods
-      begin
-        yield
-      rescue NameError => e
-        message = e.message
-        unless message.include?("Perhaps you meant")
-          # Find any methods that are only one character off from the given incorrect method
-          suggestions = []
-
-          invalid_semis = DocumentBuilder::string_to_semis(e.name.to_s)
-          self.methods.reject{|m| Object.methods.include?(m)}.each do |m|
-            got_match = false
-            DocumentBuilder::string_to_semis(m).each do |m_semi|
-              invalid_semis.each do |i_semi|
-                if m_semi == i_semi
-                  suggestions << m
-                  got_match = true
-                  break
-                end
-              end
-              break if got_match
-            end
-          end
-
-          if suggestions.size > 0
-            suggestions.sort!
-            message << "\nPerhaps you meant one of these methods:\n "
-            message << suggestions.join("\n ")
-          end
-        end
-        raise NameError.new(nil, e.name), message, $@
-      end
     end
 
     def processing_tag_arguments(args)
@@ -200,6 +127,37 @@ module Dryad
       ensure
         @attrs_stack.pop
       end
+    end
+  end
+    
+  # TODO: Prevent AttributesHash from being modified in place
+  class AttributesHash < Hash
+    def initialize(orig_hash = nil)
+      replace(orig_hash) if orig_hash
+    end
+
+    def +(other_hash)
+      return merge(other_hash)
+    end
+
+    def merge!(other_hash)
+      other_hash.each do |k,v|
+        if k == :class and self.has_key?(k)
+          self[k] = self[k] + " #{v}"
+        else
+          self[k] = v
+        end
+      end
+    end
+
+    def update(other_hash)
+      merge!(other_hash)
+    end
+
+    def merge(other_hash)
+      c = self.clone
+      c.merge!(other_hash)
+      return c
     end
   end
 end
