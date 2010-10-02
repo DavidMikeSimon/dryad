@@ -18,13 +18,9 @@ module Dryad
       end
     end
 
-    def text(str)
-      raw_text! CGI::escapeHTML(str)
-    end
-
-    # V is for "view", by default it just displays the given thing as a string
+    # V is for "view", by default it just displays the given thing as a safely escaped string
     def v(subject)
-      text subject.to_s
+      raw_text! CGI::escapeHTML(subject.to_s)
     end
   end
 end
