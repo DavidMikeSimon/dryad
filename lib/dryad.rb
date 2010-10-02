@@ -38,7 +38,7 @@ module Dryad
     end
 
     # Runs the given code in a new sub-context
-    # This lets you safely redefine methods inside the block; they'll be restored afterwords
+    # This lets you safely redefine methods inside the block
     def run(&block)
       if @clones_stack.last != self
         @clones_stack.last.run(&block)
@@ -46,36 +46,9 @@ module Dryad
         c = clone
         @clones_stack.push(c)
         begin
-          c.instance_eval &block
-        rescue NameError => e
-          # Find any methods that are only one character off from the given incorrect method
-          message = e.message
-
-          unless message.include?("Perhaps you meant")
-            invalid_semis = DocumentBuilder::string_to_semis(e.name.to_s)
-            suggestions = []
-            self.methods.reject{|m| Object.methods.include?(m)}.each do |m|
-              got_match = false
-              DocumentBuilder::string_to_semis(m).each do |m_semi|
-                invalid_semis.each do |i_semi|
-                  if m_semi == i_semi
-                    suggestions << m
-                    got_match = true
-                    break
-                  end
-                end
-                break if got_match
-              end
-            end
-
-            if suggestions.size > 0
-              suggestions.sort!
-              message << "\nPerhaps you meant one of these methods:\n "
-              message << suggestions.join("\n ")
-            end
+          suggesting_near_match_methods do
+            c.instance_eval &block
           end
-
-          raise NameError.new(nil, e.name), message, $@
         ensure
           @clones_stack.pop
         end
@@ -158,6 +131,40 @@ module Dryad
       end
 
       @method_being_wrapped = false
+    end
+
+    def suggesting_near_match_methods
+      begin
+        yield
+      rescue NameError => e
+        message = e.message
+        unless message.include?("Perhaps you meant")
+          # Find any methods that are only one character off from the given incorrect method
+          suggestions = []
+
+          invalid_semis = DocumentBuilder::string_to_semis(e.name.to_s)
+          self.methods.reject{|m| Object.methods.include?(m)}.each do |m|
+            got_match = false
+            DocumentBuilder::string_to_semis(m).each do |m_semi|
+              invalid_semis.each do |i_semi|
+                if m_semi == i_semi
+                  suggestions << m
+                  got_match = true
+                  break
+                end
+              end
+              break if got_match
+            end
+          end
+
+          if suggestions.size > 0
+            suggestions.sort!
+            message << "\nPerhaps you meant one of these methods:\n "
+            message << suggestions.join("\n ")
+          end
+        end
+        raise NameError.new(nil, e.name), message, $@
+      end
     end
 
     def processing_tag_arguments(args)
