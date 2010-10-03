@@ -44,7 +44,7 @@ class CustomTagsTest < Test::Unit::TestCase
     end
   end
 
-  def test_temporary_redefinition
+  def test_temporary_redef
     @taglib.add do
       def foo
         raw_tag :bar
@@ -64,7 +64,7 @@ class CustomTagsTest < Test::Unit::TestCase
     end
   end
 
-  def test_nested_temporary_redefinition
+  def test_nested_temporary_redef
     @taglib.add do
       def foo
         raw_tag :bar
@@ -90,7 +90,7 @@ class CustomTagsTest < Test::Unit::TestCase
     end
   end
 
-  def test_permanent_redefinition
+  def test_permanent_redef
     @taglib.add do
       def foo
         raw_tag :bar
@@ -108,7 +108,7 @@ class CustomTagsTest < Test::Unit::TestCase
     end
   end
 
-  def test_nested_redef
+  def test_block_nested_redef
     @taglib.add do
       def foo
         raw_tag :bar
@@ -129,6 +129,48 @@ class CustomTagsTest < Test::Unit::TestCase
       xyz do
         foo
       end
+    end
+  end
+
+  def test_add_nested_redef
+    @taglib.add do
+      def foo
+        raw_tag :bar
+      end
+
+      def xyz
+        foo
+      end
+    end
+
+    @taglib.add do
+      def foo
+        raw_tag :narf
+      end
+    end
+
+    assert_output '<narf/>', @taglib do
+      xyz
+    end
+  end
+  
+  def test_nested_redef
+    @taglib.add do
+      def foo
+        raw_tag :bar
+      end
+
+      def xyz
+        foo
+      end
+    end
+
+    assert_output '<bar/><narf/>', @taglib do
+      xyz
+      def foo
+        raw_tag :narf
+      end
+      xyz
     end
   end
 

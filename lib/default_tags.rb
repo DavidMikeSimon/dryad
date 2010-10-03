@@ -3,10 +3,9 @@ require 'cgi'
 module Dryad 
   DefaultTags = proc do
     def raw_tag(sym, &block)
-      attrs = attributes
       attr_str = ""
-      if attrs.size > 0
-        attr_str = " " + attrs.map{|k,v| "#{k}=\"#{CGI::escapeHTML(v)}\""}.join(" ")
+      if attributes.size > 0
+        attr_str = " " + attributes.map{|k,v| "#{k}=\"#{CGI::escapeHTML(v)}\""}.join(" ")
       end
 
       if block

@@ -10,127 +10,129 @@ module Dryad
     end
  
     def output(target, &block)
-      builder = DocumentBuilder.new(target)
+      writer = DocumentWriter.new(target)
       @tag_def_blocks.each do |b|
-        builder = builder.send(:permanent_clone)
-        builder.instance_eval &b
+        writer.run :leave_on_stack => true, &b
       end
-      builder.run &block
+      writer.run &block
     end
 
     def add(&block)
-      if block
-        @tag_def_blocks.push block
-      else
-        raise DryadError.new("TagLibrary.add must be given a block")
-      end
+      raise DryadError.new("TagLibrary.add must be given a block") unless block
+      @tag_def_blocks.push block
     end
   end
 
-  class DocumentBuilder
+  private
+
+  class DocumentWriter
     def initialize(io)
       @io = io
-      @attrs_stack = []
-      @clones_stack = [self]
+      @context_stack = []
+
+      context_base = Class.new
+      context_base.instance_eval &ContextBaseMethods
+      @context_stack.push context_base
+      writer = self
+      @context_stack.last.instance_eval { @_writer = writer }
     end
 
-    def raw_text!(str)
+    def write(str)
       @io.write str
     end
 
-    # Runs the given code in a new sub-context
-    # This lets you safely redefine methods inside the block
-    def run(&block)
-      if @clones_stack.last != self
-        @clones_stack.last.run(&block)
-      else
-        c = clone
-        @clones_stack.push(c)
-        begin
-          c.instance_eval &block
-        rescue NameError => e
-          NearMissSuggestions::reraise_with_suggestions(e, self)
-        ensure
-          @clones_stack.pop
+    def run(options = {}, &block)
+      new_context = Class.new(@context_stack.last)
+      @context_stack.last.instance_variables.each do |varname|
+        value = @context_stack.last.instance_variable_get(varname.to_sym)
+        if !(value.is_a?(FalseClass) || value.is_a?(TrueClass) || value.is_a?(NilClass))
+          value = value.clone
         end
+        new_context.instance_variable_set(varname.to_sym, value)
       end
-    end
+      @context_stack.push new_context
 
-    def attributes
-      @attrs_stack.last or AttributesHash.new
-    end
-
-    private
-
-    def permanent_clone
-      # Called permanent because this clone needs to exist for as long as any clones of this DocumentBuilder are in use
-      c = clone
-      @clones_stack.push(c)
-      return c
-    end
-
-    # This makes clone private
-    def clone
-      super
-    end
-
-    def singleton_method_added(symbol)
-      return if @method_being_wrapped # Otherwise we'll try to wrap the wrapper recursively
-      @method_being_wrapped = true
-
-      # Get the singleton method that was just defined
-      sc = lambda { class << self; self; end }.call
-      wrapped_method = sc.instance_method(symbol).bind(self)
-
-      # Overwrite it with a wrapper method that calls the original with mediated input
-      sc.send(:define_method, symbol) do |*args, &block|
-        run do # The main purpose of using run here is that if we're not at the top of the clone stack, it moves us there
-          processing_tag_arguments(args) do |new_args|
-            wrapped_method.call(*new_args, &block)
-          end
-        end
-      end
-
-      @method_being_wrapped = false
-    end
-
-    def processing_tag_arguments(args)
-      new_args = []
-      auto_classes = []
-      auto_id = nil
-      attrs = AttributesHash.new
-      while args.size > 0
-        arg = args.shift
-        if arg.is_a?(Hash)
-          attrs.merge! arg 
-        elsif arg.is_a?(Symbol) and ["!", "="].include?(arg.to_s[-1,1])
-          case arg.to_s[-1,1]
-          when "!"
-            auto_classes << arg.to_s.chop
-          when "="
-            raise DryadError.new("Cannot give multiple automatic id symbols to the same tag") if auto_id
-            auto_id = arg.to_s.chop
-          end
-        else
-          new_args.push arg
-        end
-      end
-
-      auto_classes.each do |c|
-        attrs.merge!({:class => c})
-      end
-      attrs[:id] = auto_id if auto_id
-      
-      @attrs_stack.push(attrs)
       begin
-        yield new_args
+        @context_stack.last.instance_eval &block
+      rescue NameError => e
+        NearMissSuggestions::reraise_with_suggestions(e, self)
       ensure
-        @attrs_stack.pop
+        unless options[:leave_on_stack]
+          @context_stack.pop
+        end
       end
+    end
+
+    ContextBaseMethods = proc do
+      def attributes
+        @_attributes || AttributesHash.new
+      end
+
+      def raw_text!(str)
+        @_writer.write str
+      end
+
+      # Runs the given code in a new sub-context
+      def run(&block)
+        @_writer.run &block
+      end
+
+      private
+
+      def process_tag_arguments(args)
+        new_args = []
+        attrs = AttributesHash.new
+
+        auto_classes = []
+        auto_id = nil
+        args.each do |arg|
+          if arg.is_a?(Hash)
+            attrs.merge! arg 
+          elsif arg.is_a?(Symbol) and ["!", "="].include?(arg.to_s[-1,1])
+            case arg.to_s[-1,1]
+            when "!"
+              auto_classes << arg.to_s.chop
+            when "="
+              raise DryadError.new("Cannot give multiple automatic id symbols to the same tag") if auto_id
+              auto_id = arg.to_s.chop
+            end
+          else
+            new_args.push arg
+          end
+        end
+
+        auto_classes.each do |c|
+          attrs.merge!({:class => c})
+        end
+        attrs[:id] = auto_id if auto_id
+
+        @_attributes = attrs
+        return new_args
+      end
+    
+#      def singleton_method_added(symbol)
+#        return if @_method_being_wrapped || symbol == :singleton_method_added
+#        @_method_being_wrapped = true
+#
+#        begin
+#          wrapped_method = method(symbol) 
+#          singleton_class = lambda { class << self; self; end }.call
+#          singleton_class.instance_eval do
+#            define_method symbol do |*args, &block|
+#              run do
+#                new_args = process_tag_arguments(args)
+#                wrapped_method.call(*new_args, &block)
+#              end
+#            end
+#          end
+#        ensure
+#          @_method_being_wrapped = nil
+#        end
+#      end
     end
   end
-    
-  # TODO: Prevent AttributesHash from being modified in place
+
+  # TODO: Prevent AttributesHash from being modified in place after being setup
   class AttributesHash < Hash
     def initialize(orig_hash = nil)
       replace(orig_hash) if orig_hash
