@@ -55,7 +55,7 @@ module Dryad
       begin
         @context_stack.last.instance_eval &block
       rescue NameError => e
-        NearMissSuggestions::reraise_with_suggestions(e, self)
+        NearMissSuggestions::reraise_with_suggestions(e, @context_stack.last)
       ensure
         unless options[:leave_on_stack]
           @context_stack.pop
