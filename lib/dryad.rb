@@ -24,6 +24,82 @@ module Dryad
   end
 
   private
+    
+  module ContextBaseMethods
+    def attributes
+      @_attributes || AttributesHash.new
+    end
+
+    def raw_text!(str)
+      @_writer.write str
+    end
+
+    # Runs the given code in a new sub-context
+    def run(&block)
+      @_writer.run &block
+    end
+
+    private
+
+    def process_tag_arguments(args)
+      new_args = []
+      attrs = AttributesHash.new
+
+      auto_classes = []
+      auto_id = nil
+      args.each do |arg|
+        if arg.is_a?(Hash)
+          attrs.merge! arg 
+        elsif arg.is_a?(Symbol) and ["!", "="].include?(arg.to_s[-1,1])
+          case arg.to_s[-1,1]
+          when "!"
+            auto_classes << arg.to_s.chop
+          when "="
+            raise DryadError.new("Cannot give multiple automatic id symbols to the same tag") if auto_id
+            auto_id = arg.to_s.chop
+          end
+        else
+          new_args.push arg
+        end
+      end
+
+      auto_classes.each do |c|
+        attrs.merge!({:class => c})
+      end
+      attrs[:id] = auto_id if auto_id
+
+      @_attributes = attrs
+      return new_args
+    end
+  
+#      def singleton_method_added(symbol)
+#        return if @_method_being_wrapped || symbol == :singleton_method_added
+#        @_method_being_wrapped = true
+#
+#        begin
+#          wrapped_method = method(symbol) 
+#          singleton_class = lambda { class << self; self; end }.call
+#          singleton_class.instance_eval do
+#            define_method symbol do |*args, &block|
+#              run do
+#                new_args = process_tag_arguments(args)
+#                wrapped_method.call(*new_args, &block)
+#              end
+#            end
+#          end
+#        ensure
+#          @_method_being_wrapped = nil
+#        end
+#      end
+
+    def method_missing(symbol, *args)
+      begin
+        super
+      rescue NameError => e
+        NearMissSuggestions::reraise_with_suggestions(e, self)
+      end
+    end
+  end
 
   class DocumentWriter
     def initialize(io)
@@ -31,7 +107,7 @@ module Dryad
       @context_stack = []
 
       context_base = Class.new
-      context_base.instance_eval &ContextBaseMethods
+      context_base.extend ContextBaseMethods
       @context_stack.push context_base
       writer = self
       @context_stack.last.instance_eval { @_writer = writer }
@@ -57,82 +133,6 @@ module Dryad
       ensure
         unless options[:leave_on_stack]
           @context_stack.pop
-        end
-      end
-    end
-
-    ContextBaseMethods = proc do
-      def attributes
-        @_attributes || AttributesHash.new
-      end
-
-      def raw_text!(str)
-        @_writer.write str
-      end
-
-      # Runs the given code in a new sub-context
-      def run(&block)
-        @_writer.run &block
-      end
-
-      private
-
-      def process_tag_arguments(args)
-        new_args = []
-        attrs = AttributesHash.new
-
-        auto_classes = []
-        auto_id = nil
-        args.each do |arg|
-          if arg.is_a?(Hash)
-            attrs.merge! arg 
-          elsif arg.is_a?(Symbol) and ["!", "="].include?(arg.to_s[-1,1])
-            case arg.to_s[-1,1]
-            when "!"
-              auto_classes << arg.to_s.chop
-            when "="
-              raise DryadError.new("Cannot give multiple automatic id symbols to the same tag") if auto_id
-              auto_id = arg.to_s.chop
-            end
-          else
-            new_args.push arg
-          end
-        end
-
-        auto_classes.each do |c|
-          attrs.merge!({:class => c})
-        end
-        attrs[:id] = auto_id if auto_id
-
-        @_attributes = attrs
-        return new_args
-      end
-    
-#      def singleton_method_added(symbol)
-#        return if @_method_being_wrapped || symbol == :singleton_method_added
-#        @_method_being_wrapped = true
-#
-#        begin
-#          wrapped_method = method(symbol) 
-#          singleton_class = lambda { class << self; self; end }.call
-#          singleton_class.instance_eval do
-#            define_method symbol do |*args, &block|
-#              run do
-#                new_args = process_tag_arguments(args)
-#                wrapped_method.call(*new_args, &block)
-#              end
-#            end
-#          end
-#        ensure
-#          @_method_being_wrapped = nil
-#        end
-#      end
-
-      def method_missing(symbol, *args)
-        begin
-          super
-        rescue NameError => e
-          NearMissSuggestions::reraise_with_suggestions(e, self)
         end
       end
     end
