@@ -46,15 +46,6 @@ module Dryad
       @_attributes || AttributesHash.new
     end
 
-    # Special case override, since the p method is already in Object but we'll almost always want it for HTML <p>
-    # Class method is needed to record usage, instance method needed to 
-    def self.p(*args, &block)
-      self.send(:method_missing, :p, *args, &block)
-    end
-    def p(*args, &block)
-      self.send(:method_missing, :p, *args, &block)
-    end
-
     private
 
     def process_tag_arguments(args)
@@ -87,23 +78,12 @@ module Dryad
       return new_args
     end
  
-    # The real method_missing for regular method calls: processes arguments then forwards to implementation
-    # This version uses NearMissSuggestions to notice spelling errors in tag names
+    # The real method_missing for regular method calls
+    # Overridden to use NearMissSuggestions to notice spelling errors in tag names
     def method_missing(symbol, *args, &block)
-      execute_tag(self, symbol, *args, &block)
+      super
     rescue NameError => e
       NearMissSuggestions::reraise_with_suggestions(e, self, $@)
-    end
-
-    def execute_tag(target, symbol, *args, &block)
-      method = @_tag_defs[symbol] 
-      if method
-        method.bind(self).call(*process_tag_arguments(args), &block)
-      elsif @_parent
-        @_parent.send(:execute_tag, self, symbol, *args, &block)
-      else 
-        raise NameError.new("No such tag method defined: #{symbol}")
-      end
     end
 
     # The evil sneaky method_missing for the silly hack used for delayed execution in class_eval
@@ -115,12 +95,10 @@ module Dryad
     end
  
     def begin_capture
-      @@tag_def_target = self
       @@recording = []
     end
 
     def end_capture
-      @@tag_def_target = nil
       r = @@recording
       @@recording = nil
       return r
@@ -133,11 +111,17 @@ module Dryad
       end
     end
 
-    @@tag_def_target = nil
+    @@adding_method = nil
     def self.method_added(symbol)
+      return if @@adding_method
+      @@adding_method = true
       tag_def = instance_method(symbol)
       remove_method symbol
-      @@tag_def_target.instance_variable_get(:@_tag_defs)[symbol] = tag_def
+      define_method symbol do |*args, &block|
+        tag_def.bind(self).call(*process_tag_arguments(args), &block)
+      end
+    ensure
+      @@adding_method = nil
     end
   end
 
