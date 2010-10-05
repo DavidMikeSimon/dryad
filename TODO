@@ -10,3 +10,4 @@
 - Prevent AttributesHash from being modified in place after being setup
 - If using the classwrap strategy, error out if user tries to alter class on the fly; that's _not_ gonna work with my
   magic
+- Consider freezing instance variables in sub contexts instead of cloning them
