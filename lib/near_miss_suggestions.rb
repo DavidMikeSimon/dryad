@@ -1,6 +1,6 @@
 module Dryad
   module NearMissSuggestions
-    def self.reraise_with_suggestions(e, obj)
+    def self.reraise_with_suggestions(e, obj, callstack)
       message = e.message
 
       unless message.include?("Perhaps you meant")
@@ -29,7 +29,7 @@ module Dryad
         end
       end
 
-      raise NameError.new(nil, e.name), message, $@
+      raise NameError.new(nil, e.name), message, callstack
     end
 
     private
