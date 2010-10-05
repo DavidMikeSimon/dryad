@@ -120,6 +120,10 @@ module Dryad
       define_method symbol do |*args, &block|
         tag_def.bind(self).call(*process_tag_arguments(args), &block)
       end
+      singleton_class = lambda { class << self; self; end }.call
+      singleton_class.send(:define_method, symbol) do |*args, &block|
+        method_missing(symbol, *args, &block)
+      end
     ensure
       @@adding_method = nil
     end
