@@ -51,9 +51,8 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
 
-    assert_output '<bar/><narf/><bar/>', @taglib do
+    assert_output '<narf/><bar/>', @taglib do
       run do
-        foo
         def foo
           raw_tag :narf
         end
@@ -77,9 +76,8 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
 
-    assert_output '<xyz><bar/></xyz><xyz><narf/></xyz><xyz><bar/></xyz>', @taglib do
+    assert_output '<xyz><narf/></xyz><xyz><bar/></xyz>', @taglib do
       run do
-        xyz
         def foo
           raw_tag :narf
         end
@@ -165,8 +163,7 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
 
-    assert_output '<bar/><narf/>', @taglib do
-      xyz
+    assert_output '<narf/>', @taglib do
       def foo
         raw_tag :narf
       end
