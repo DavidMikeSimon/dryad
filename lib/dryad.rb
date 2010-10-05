@@ -1,6 +1,7 @@
 require 'default_tags'
 require 'exceptions'
 require 'near_miss_suggestions'
+require 'set'
 
 module Dryad
   class TagLibrary
@@ -112,6 +113,7 @@ module Dryad
     end
 
     @@adding_method = nil
+    @@kernel_methods = Set.new(Kernel.methods.map(&:to_sym))
     def self.method_added(symbol)
       return if @@adding_method
       @@adding_method = true
@@ -120,9 +122,14 @@ module Dryad
       define_method symbol do |*args, &block|
         tag_def.bind(self).call(*process_tag_arguments(args), &block)
       end
-      singleton_class = lambda { class << self; self; end }.call
-      singleton_class.send(:define_method, symbol) do |*args, &block|
-        method_missing(symbol, *args, &block)
+
+      # If a method by this name already exists in Kernel (p, for example), then
+      # we need to trap class-level calls for when we're recording
+      if @@kernel_methods.include?(symbol)
+        singleton_class = lambda { class << self; self; end }.call
+        singleton_class.send(:define_method, symbol) do |*args, &block|
+          method_missing(symbol, *args, &block)
+        end
       end
     ensure
       @@adding_method = nil
