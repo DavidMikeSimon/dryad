@@ -24,32 +24,37 @@ module Dryad
   end
 
   private
-    
-  module ContextBaseMethods
-    def attributes
-      @_attributes || AttributesHash.new
+  
+  class Context
+    def initialize(writer)
+      # Using funny underscored name to avoid clashing with user instance variables
+      @_writer = writer
     end
 
     def raw_text!(str)
       @_writer.write str
     end
 
-    # Runs the given code in a new sub-context
+    # Runs the given block in a new sub-context
     def run(&block)
       @_writer.run &block
     end
 
+    def attributes
+      @_attributes || AttributesHash.new
+    end
+      
     private
 
     def process_tag_arguments(args)
+      @_attributes = AttributesHash.new
       new_args = []
-      attrs = AttributesHash.new
 
       auto_classes = []
       auto_id = nil
       args.each do |arg|
         if arg.is_a?(Hash)
-          attrs.merge! arg 
+          @_attributes.merge! arg 
         elsif arg.is_a?(Symbol) and ["!", "="].include?(arg.to_s[-1,1])
           case arg.to_s[-1,1]
           when "!"
@@ -64,34 +69,15 @@ module Dryad
       end
 
       auto_classes.each do |c|
-        attrs.merge!({:class => c})
+        @_attributes.merge!({:class => c})
       end
-      attrs[:id] = auto_id if auto_id
+      @_attributes[:id] = auto_id if auto_id
 
-      @_attributes = attrs
       return new_args
     end
-  
-#      def singleton_method_added(symbol)
-#        return if @_method_being_wrapped || symbol == :singleton_method_added
-#        @_method_being_wrapped = true
-#
-#        begin
-#          wrapped_method = method(symbol) 
-#          singleton_class = lambda { class << self; self; end }.call
-#          singleton_class.instance_eval do
-#            define_method symbol do |*args, &block|
-#              run do
-#                new_args = process_tag_arguments(args)
-#                wrapped_method.call(*new_args, &block)
-#              end
-#            end
-#          end
-#        ensure
-#          @_method_being_wrapped = nil
-#        end
-#      end
-
+ 
+    # The real method_missing, for when the user calls a non-existant method
+    # This version uses NearMissSuggestions to notice spelling errors in tag names
     def method_missing(symbol, *args)
       begin
         super
@@ -99,18 +85,37 @@ module Dryad
         NearMissSuggestions::reraise_with_suggestions(e, self)
       end
     end
+
+    # The evil sneaky method_missing for the silly hack used by dryad for delayed execution
+    # Method definitions will work as normal, but any attempts to call methods will just be recorded
+    @@recording = nil
+    def self.method_missing(symbol, *args, &block)
+      @@recording << [symbol, args, block]
+    end
+   
+    def self.begin_capture
+      @@recording = []
+    end
+
+    def self.end_capture
+      r = @@recording
+      @@recording = nil
+      return r
+    end
+
+    def replay_capture(statements)
+      statements.each do |statement|
+        symbol, args, block = statement
+        new_args = process_tag_arguments(args)
+        send(symbol, *new_args, &block)
+      end
+    end
   end
 
   class DocumentWriter
     def initialize(io)
       @io = io
-      @context_stack = []
-
-      context_base = Class.new
-      context_base.extend ContextBaseMethods
-      @context_stack.push context_base
-      writer = self
-      @context_stack.last.instance_eval { @_writer = writer }
+      @context_stack = [Context.new(self)]
     end
 
     def write(str)
@@ -118,27 +123,26 @@ module Dryad
     end
 
     def run(options = {}, &block)
-      new_context = Class.new(@context_stack.last)
+      new_context = Class.new(@context_stack.last.class).new(self)
       @context_stack.last.instance_variables.each do |varname|
+        next if varname[0,2] == "@_" # Dryad internals, not to be automatically copied
         value = @context_stack.last.instance_variable_get(varname.to_sym)
-        if !(value.is_a?(FalseClass) || value.is_a?(TrueClass) || value.is_a?(NilClass))
-          value = value.clone
-        end
+        value = value.clone unless [FalseClass, TrueClass. NilClass].include?(value.class)
         new_context.instance_variable_set(varname.to_sym, value)
       end
-      @context_stack.push new_context
 
+      @context_stack.push new_context
       begin
-        @context_stack.last.instance_eval &block
+        @context_stack.last.class.send(:begin_capture)
+        @context_stack.last.class.class_eval &block
+        statements = @context_stack.last.class.send(:end_capture)
+        @context_stack.last.send(:replay_capture, statements)
       ensure
-        unless options[:leave_on_stack]
-          @context_stack.pop
-        end
+        @context_stack.pop unless options[:leave_on_stack]
       end
     end
   end
 
-  # TODO: Prevent AttributesHash from being modified in place after being setup
   class AttributesHash < Hash
     def initialize(orig_hash = nil)
       replace(orig_hash) if orig_hash
