@@ -2,10 +2,12 @@
   - Makes sure all attribute keys are valid in XML
   - Makes sure all tags are valid in XML
   - In the HTML taglib, checks attributes for tag-specific validity
-  - Disallows tag definitions that end with question marks or bangs or mask built-in methods
-  - Does not cause a performance hit if not in use (use OOP, not lots of ifs)
-  - Flag attempts to use tag return values with helpful error messages
+  - Does not cause a performance hit if not in use (use monkey-patches, not lots of ifs)
+  - Flags attempts to use tag return values with helpful error messages
+  - Maintains callstack through the recording/playback process
 - Add methods like dryml's before, after, prepend, append stuff, which check against tag name and class
 - Have all tags return nil (so that attempts to use tag return values cause errors)
 - Prevent AttributesHash from being modified in place after being setup
 - Consider freezing instance variables in sub contexts
+- Consider executing statements immediately instead of recording when not in tag def block
+  - This will be handy later when other things have def-like semantics (i.e. prepend and append)
