@@ -8,7 +8,7 @@ module Dryad
         suggestions = []
 
         invalid_semis = string_to_semis(e.name.to_s)
-        obj.methods.reject{|m| Object.methods.include?(m)}.each do |m|
+        obj.methods.reject{|m| Kernel.methods.include?(m)}.each do |m|
           got_match = false
           string_to_semis(m).each do |m_semi|
             invalid_semis.each do |i_semi|
