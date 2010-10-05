@@ -4,7 +4,7 @@ require 'html_tags'
 class HtmlTest < Test::Unit::TestCase
   def setup
     @taglib = Dryad::TagLibrary.new
-    @taglib.add &Dryad::HtmlTags
+    @taglib.add_module Dryad::HtmlTags
 
     @simple_document_block = proc do
       html do

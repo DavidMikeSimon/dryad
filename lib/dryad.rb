@@ -7,7 +7,7 @@ module Dryad
   class TagLibrary
     def initialize
       @tag_def_blocks = []
-      add &DefaultTags
+      add_module DefaultTags
     end
  
     def output(target, &block)
@@ -21,6 +21,12 @@ module Dryad
     def add(&block)
       raise DryadError.new("TagLibrary.add must be given a block") unless block
       @tag_def_blocks.push block
+    end
+
+    def add_module(mod)
+      add do
+        include mod
+      end
     end
   end
 
@@ -88,8 +94,8 @@ module Dryad
     end
 
     # The evil sneaky method_missing for the silly hack used for delayed execution in class_eval
-    # Method definitions will be trapped by method_added and moved to the appropriate @_tag_blocks
-    # Any attempts to call methods will be prevented, but recorded for later
+    # Method definitions will be trapped by method_added and appropriately wrapped
+    # Any attempts to call instance methods will be prevented, but recorded for later
     @@recording = nil
     def self.method_missing(symbol, *args, &block)
       @@recording << [symbol, args, block]
@@ -112,19 +118,27 @@ module Dryad
       end
     end
 
-    @@adding_method = nil
+    def self.include(mod)
+      super
+      mod.instance_methods.each do |name|
+        method_added(name.to_sym)
+      end
+    end
+
+    @@adding_method = false
     @@kernel_methods = Set.new(Kernel.methods.map(&:to_sym))
     def self.method_added(symbol)
       return if @@adding_method
       @@adding_method = true
+      
+      # Wrap the method that was defined with some convienent argument-preprocessing
       tag_def = instance_method(symbol)
-      remove_method symbol
       define_method symbol do |*args, &block|
         tag_def.bind(self).call(*process_tag_arguments(args), &block)
       end
 
       # If a method by this name already exists in Kernel (p, for example), then
-      # we need to trap class-level calls for when we're recording
+      # we need to trap class-level calls for when we're recording later
       if @@kernel_methods.include?(symbol)
         singleton_class = lambda { class << self; self; end }.call
         singleton_class.send(:define_method, symbol) do |*args, &block|
@@ -132,7 +146,7 @@ module Dryad
         end
       end
     ensure
-      @@adding_method = nil
+      @@adding_method = false
     end
   end
 

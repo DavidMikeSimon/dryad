@@ -1,7 +1,7 @@
 require 'cgi'
 
 module Dryad 
-  DefaultTags = proc do
+  module DefaultTags
     def raw_tag(sym, &block)
       attr_str = ""
       if attributes.size > 0

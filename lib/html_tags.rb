@@ -1,5 +1,5 @@
 module Dryad
-  HtmlTags = proc do
+  module HtmlTags
     def html(&block)
       raw_tag :html, attributes, &block
     end
