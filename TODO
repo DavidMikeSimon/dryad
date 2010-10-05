@@ -8,3 +8,5 @@
 - Add methods like dryml's before, after, prepend, append stuff, which check against tag name and class
 - Have all tags return nil (so that attempts to use tag return values cause errors)
 - Prevent AttributesHash from being modified in place after being setup
+- If using the classwrap strategy, error out if user tries to alter class on the fly; that's _not_ gonna work with my
+  magic
