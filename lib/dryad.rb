@@ -26,9 +26,11 @@ module Dryad
   private
   
   class Context
-    def initialize(writer)
-      # Using funny underscored name to avoid clashing with user instance variables
+    def initialize(writer, parent = nil)
+      # Using funny underscored names to avoid clashing with user instance variables
       @_writer = writer
+      @_tag_defs = {}
+      @_parent = parent
     end
 
     def raw_text!(str)
@@ -43,7 +45,16 @@ module Dryad
     def attributes
       @_attributes || AttributesHash.new
     end
-      
+
+    # Special case override, since the p method is already in Object but we'll almost always want it for HTML <p>
+    # Class method is needed to record usage, instance method needed to 
+    def self.p(*args, &block)
+      self.send(:method_missing, :p, *args, &block)
+    end
+    def p(*args, &block)
+      self.send(:method_missing, :p, *args, &block)
+    end
+
     private
 
     def process_tag_arguments(args)
@@ -76,28 +87,40 @@ module Dryad
       return new_args
     end
  
-    # The real method_missing, for when the user calls a non-existant method
+    # The real method_missing for regular method calls: processes arguments then forwards to implementation
     # This version uses NearMissSuggestions to notice spelling errors in tag names
-    def method_missing(symbol, *args)
-      begin
-        super
-      rescue NameError => e
-        NearMissSuggestions::reraise_with_suggestions(e, self)
+    def method_missing(symbol, *args, &block)
+      execute_tag(self, symbol, *args, &block)
+    rescue NameError => e
+      NearMissSuggestions::reraise_with_suggestions(e, self, $@)
+    end
+
+    def execute_tag(target, symbol, *args, &block)
+      method = @_tag_defs[symbol] 
+      if method
+        method.bind(self).call(*process_tag_arguments(args), &block)
+      elsif @_parent
+        @_parent.send(:execute_tag, self, symbol, *args, &block)
+      else 
+        raise NameError.new("No such tag method defined: #{symbol}")
       end
     end
 
     # The evil sneaky method_missing for the silly hack used for delayed execution in class_eval
-    # Method definitions will work as normal, but any attempts to call methods will just be recorded
+    # Method definitions will be trapped by method_added and moved to the appropriate @_tag_blocks
+    # Any attempts to call methods will be prevented, but recorded for later
     @@recording = nil
     def self.method_missing(symbol, *args, &block)
       @@recording << [symbol, args, block]
     end
  
-    def self.begin_capture
+    def begin_capture
+      @@tag_def_target = self
       @@recording = []
     end
 
-    def self.end_capture
+    def end_capture
+      @@tag_def_target = nil
       r = @@recording
       @@recording = nil
       return r
@@ -106,9 +129,15 @@ module Dryad
     def replay_capture(statements)
       statements.each do |statement|
         symbol, args, block = statement
-        new_args = process_tag_arguments(args)
-        send(symbol, *new_args, &block)
+        send(symbol, *args, &block)
       end
+    end
+
+    @@tag_def_target = nil
+    def self.method_added(symbol)
+      tag_def = instance_method(symbol)
+      remove_method symbol
+      @@tag_def_target.instance_variable_get(:@_tag_defs)[symbol] = tag_def
     end
   end
 
@@ -123,7 +152,7 @@ module Dryad
     end
 
     def run(options = {}, &block)
-      new_context = Class.new(@context_stack.last.class).new(self)
+      new_context = Class.new(@context_stack.last.class).new(self, @context_stack.last)
       @context_stack.last.instance_variables.each do |varname|
         next if varname[0,2] == "@_" # Dryad internals, not to be automatically copied
         value = @context_stack.last.instance_variable_get(varname.to_sym)
@@ -143,9 +172,9 @@ module Dryad
     private
 
     def capture(&block)
-      @context_stack.last.class.send(:begin_capture)
+      @context_stack.last.send(:begin_capture)
       @context_stack.last.class.class_eval &block
-      return @context_stack.last.class.send(:end_capture)
+      return @context_stack.last.send(:end_capture)
     end
   end
 
