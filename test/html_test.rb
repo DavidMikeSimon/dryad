@@ -3,8 +3,8 @@ require 'html_tags'
 
 class HtmlTest < Test::Unit::TestCase
   def setup
-    @taglib = Dryad::TagLibrary.new
-    @taglib.add_module Dryad::HtmlTags
+    @dryad = Dryad::Dryad.new
+    @dryad.add_module Dryad::HtmlTags
 
     @simple_document_block = proc do
       html do
@@ -19,6 +19,6 @@ class HtmlTest < Test::Unit::TestCase
 
   def test_simple_document
     doc = "<html><body><p>Hello <b>world!</b></p><hr/><p>I am a banana!</p></body></html>"
-    assert_output doc, @taglib, &@simple_document_block
+    assert_output doc, @dryad, &@simple_document_block
   end
 end

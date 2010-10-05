@@ -3,29 +3,29 @@ require 'stringio'
 
 class CustomTagsTest < Test::Unit::TestCase
   def setup
-    @taglib = Dryad::TagLibrary.new
+    @dryad = Dryad::Dryad.new
   end
 
   def test_simple_tag_def
-    @taglib.add do
+    @dryad.add do
       def foo
         raw_tag :bar
       end
     end
 
-    assert_output "<bar/>", @taglib do
+    assert_output "<bar/>", @dryad do
       foo
     end
   end
 
   def test_block_passthru
-    @taglib.add do
+    @dryad.add do
       def foo(&block)
         raw_tag :bar, &block
       end
     end
      
-    assert_output "<bar>narf</bar>", @taglib do
+    assert_output "<bar>narf</bar>", @dryad do
       foo do
         v"narf"
       end
@@ -33,25 +33,25 @@ class CustomTagsTest < Test::Unit::TestCase
   end
 
   def test_attributes_passthru
-    @taglib.add do
+    @dryad.add do
       def foo
         raw_tag :bar, attributes
       end
     end
 
-    assert_output '<bar x="y"/>', @taglib do
+    assert_output '<bar x="y"/>', @dryad do
       foo :x => "y"
     end
   end
 
   def test_temporary_redef
-    @taglib.add do
+    @dryad.add do
       def foo
         raw_tag :bar
       end
     end
 
-    assert_output '<narf/><bar/>', @taglib do
+    assert_output '<narf/><bar/>', @dryad do
       run do
         def foo
           raw_tag :narf
@@ -64,7 +64,7 @@ class CustomTagsTest < Test::Unit::TestCase
   end
 
   def test_nested_temporary_redef
-    @taglib.add do
+    @dryad.add do
       def foo
         raw_tag :bar
       end
@@ -76,7 +76,7 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
 
-    assert_output '<xyz><narf/></xyz><xyz><bar/></xyz>', @taglib do
+    assert_output '<xyz><narf/></xyz><xyz><bar/></xyz>', @dryad do
       run do
         def foo
           raw_tag :narf
@@ -89,25 +89,25 @@ class CustomTagsTest < Test::Unit::TestCase
   end
 
   def test_permanent_redef
-    @taglib.add do
+    @dryad.add do
       def foo
         raw_tag :bar
       end
     end
     
-    @taglib.add do
+    @dryad.add do
       def foo
         raw_tag :blork
       end
     end
 
-    assert_output '<blork/>', @taglib do
+    assert_output '<blork/>', @dryad do
       foo
     end
   end
 
   def test_block_nested_redef
-    @taglib.add do
+    @dryad.add do
       def foo
         raw_tag :bar
       end
@@ -117,13 +117,13 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
 
-    @taglib.add do
+    @dryad.add do
       def foo
         raw_tag :zarf
       end
     end
 
-    assert_output '<xyz><zarf/></xyz>', @taglib do
+    assert_output '<xyz><zarf/></xyz>', @dryad do
       xyz do
         foo
       end
@@ -131,7 +131,7 @@ class CustomTagsTest < Test::Unit::TestCase
   end
 
   def test_add_nested_redef
-    @taglib.add do
+    @dryad.add do
       def foo
         raw_tag :bar
       end
@@ -141,19 +141,19 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
 
-    @taglib.add do
+    @dryad.add do
       def foo
         raw_tag :narf
       end
     end
 
-    assert_output '<narf/>', @taglib do
+    assert_output '<narf/>', @dryad do
       xyz
     end
   end
   
   def test_nested_redef
-    @taglib.add do
+    @dryad.add do
       def foo
         raw_tag :bar
       end
@@ -163,7 +163,7 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
 
-    assert_output '<narf/>', @taglib do
+    assert_output '<narf/>', @dryad do
       def foo
         raw_tag :narf
       end
@@ -172,13 +172,13 @@ class CustomTagsTest < Test::Unit::TestCase
   end
 
   def test_redef_with_super
-    @taglib.add do
+    @dryad.add do
       def foo
         raw_tag :bar
       end
     end
 
-    @taglib.add do
+    @dryad.add do
       def foo
         raw_tag :zarf do
           super
@@ -186,13 +186,13 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
 
-    assert_output '<zarf><bar/></zarf>', @taglib do
+    assert_output '<zarf><bar/></zarf>', @dryad do
       foo
     end
   end
 
   def test_class_concatenation
-    @taglib.add do
+    @dryad.add do
       def bar(subject)
         raw_tag :bar, attributes + {:class => "a"} do
           v subject
@@ -204,13 +204,13 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
 
-    assert_output '<bar class="c b a">narf</bar>', @taglib do
+    assert_output '<bar class="c b a">narf</bar>', @dryad do
       foo :class => "c"
     end
   end
   
   def test_auto_class_concatenation
-    @taglib.add do
+    @dryad.add do
       def bar(subject)
         raw_tag :bar, :a!, attributes do
           v subject
@@ -222,13 +222,13 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
 
-    assert_output '<bar class="c b a">narf</bar>', @taglib do
+    assert_output '<bar class="c b a">narf</bar>', @dryad do
       foo :c!
     end
   end
 
   def test_name_error_suggestion
-    @taglib.add do
+    @dryad.add do
       def duck
       end
 
@@ -238,7 +238,7 @@ class CustomTagsTest < Test::Unit::TestCase
 
     exception = nil
     begin
-      @taglib.output StringIO.new do
+      @dryad.output StringIO.new do
         duk # Whoops, a spelling error
       end
     rescue NameError => e

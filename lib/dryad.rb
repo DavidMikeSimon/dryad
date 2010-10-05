@@ -4,7 +4,7 @@ require 'near_miss_suggestions'
 require 'set'
 
 module Dryad
-  class TagLibrary
+  class Dryad
     def initialize
       @tag_def_blocks = []
       add_module DefaultTags
@@ -19,7 +19,7 @@ module Dryad
     end
 
     def add(&block)
-      raise DryadError.new("TagLibrary.add must be given a block") unless block
+      raise ArgumentError.new("Dryad.add must be given a block") unless block
       @tag_def_blocks.push block
     end
 
@@ -69,7 +69,7 @@ module Dryad
           when "!"
             auto_classes << arg.to_s.chop
           when "="
-            raise DryadError.new("Cannot give multiple automatic id symbols to the same tag") if auto_id
+            raise MultipleIdsError.new("Cannot give multiple automatic id symbols to the same tag") if auto_id
             auto_id = arg.to_s.chop
           end
         else
