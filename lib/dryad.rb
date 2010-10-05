@@ -151,7 +151,6 @@ module Dryad
       @context_stack.last.instance_variables.each do |varname|
         next if varname[0,2] == "@_" # Dryad internals, not to be automatically copied
         value = @context_stack.last.instance_variable_get(varname.to_sym)
-        value = value.clone unless [FalseClass, TrueClass. NilClass].include?(value.class)
         new_context.instance_variable_set(varname.to_sym, value)
       end
 
