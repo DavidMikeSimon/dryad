@@ -33,11 +33,9 @@ module Dryad
   private
   
   class Context
-    def initialize(writer, parent = nil)
+    def initialize(writer)
       # Using funny underscored names to avoid clashing with user instance variables
       @_writer = writer
-      @_tag_defs = {}
-      @_parent = parent
     end
 
     def raw_text!(str)
@@ -161,7 +159,7 @@ module Dryad
     end
 
     def run(options = {}, &block)
-      new_context = Class.new(@context_stack.last.class).new(self, @context_stack.last)
+      new_context = Class.new(@context_stack.last.class).new(self)
       @context_stack.last.instance_variables.each do |varname|
         next if varname[0,2] == "@_" # Dryad internals, not to be automatically copied
         value = @context_stack.last.instance_variable_get(varname.to_sym)
