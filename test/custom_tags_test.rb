@@ -234,6 +234,9 @@ class CustomTagsTest < Test::Unit::TestCase
 
       def duke
       end
+      
+      def froboz
+      end
     end
 
     exception = nil
@@ -248,5 +251,6 @@ class CustomTagsTest < Test::Unit::TestCase
     assert_equal :duk, exception.name
     assert_match /\nPerhaps you meant one of these methods:\n duck\n duke/, exception.message
     assert_no_match /\bdup\b/, exception.message # Doesn't suggest common Object methods
+    assert_no_match /\bfroboz\b/, exception.message # Doesn't suggest dissimilar method names
   end
 end
