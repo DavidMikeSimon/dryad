@@ -38,7 +38,7 @@ module Dryad
       @_writer = writer
     end
 
-    def raw_text!(str)
+    def raw_text(str)
       @_writer.write str
     end
 
