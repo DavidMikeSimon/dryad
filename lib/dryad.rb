@@ -1,6 +1,7 @@
 require 'default_tags'
 require 'exceptions'
 require 'near_miss_suggestions'
+
 require 'set'
 
 module Dryad
@@ -114,6 +115,25 @@ module Dryad
       end
     end
 
+    class InstanceSender
+      def initialize(target)
+        @target = target
+      end
+
+      def <<(statement)
+        symbol, args, block = statement
+        @target.send(symbol, *args, &block)
+      end
+    end
+
+    # Executes definitions in class_eval, but regular method calls in instance_eval
+    def self.hybrid_eval(instance, &block)
+      @@instance_method_targets.push InstanceSender.new(instance)
+      class_eval &block
+    ensure
+      @@instance_method_targets.pop
+    end
+
     def self.include(mod)
       super
       mod.instance_methods.each do |name|
@@ -166,8 +186,7 @@ module Dryad
 
       @context_stack.push new_context
       begin
-        statements = @context_stack.last.class.send(:capture, &block)
-        @context_stack.last.send(:replay, statements)
+        @context_stack.last.class.send(:hybrid_eval, @context_stack.last, &block)
       ensure
         @context_stack.pop unless options[:leave_on_stack]
       end

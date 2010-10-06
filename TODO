@@ -9,5 +9,4 @@
 - Have all tags return nil (so that attempts to use tag return values cause errors)
 - Prevent AttributesHash from being modified in place after being setup
 - Consider freezing instance variables in sub contexts
-- Consider executing statements immediately instead of recording when not in tag def block
-  - This will be handy later when other things have def-like semantics (i.e. prepend and append)
+- Don't set @io until after tag libraries loaded, complain usefully if anything tries to write before then

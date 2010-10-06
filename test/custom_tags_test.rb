@@ -51,8 +51,9 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
 
-    assert_output '<narf/><bar/>', @dryad do
+    assert_output '<bar/><narf/><bar/>', @dryad do
       run do
+        foo
         def foo
           raw_tag :narf
         end
@@ -76,8 +77,9 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
 
-    assert_output '<xyz><narf/></xyz><xyz><bar/></xyz>', @dryad do
+    assert_output '<xyz><bar/></xyz><xyz><narf/></xyz><xyz><bar/></xyz>', @dryad do
       run do
+        xyz
         def foo
           raw_tag :narf
         end
@@ -163,7 +165,8 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
 
-    assert_output '<narf/>', @dryad do
+    assert_output '<bar/><narf/>', @dryad do
+      xyz
       def foo
         raw_tag :narf
       end
