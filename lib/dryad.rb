@@ -109,7 +109,7 @@ module Dryad
       return r
     end
 
-    def replay_capture(statements)
+    def replay(statements)
       statements.each do |statement|
         symbol, args, block = statement
         send(symbol, *args, &block)
@@ -123,11 +123,11 @@ module Dryad
       end
     end
 
-    @@adding_method = false
+    @@wrapping_method = false
     @@kernel_methods = Set.new(Kernel.methods.map(&:to_sym))
     def self.method_added(symbol)
-      return if @@adding_method
-      @@adding_method = true
+      return if @@wrapping_method
+      @@wrapping_method = true
       
       # Wrap the method that was defined with some convienent argument-preprocessing
       tag_def = instance_method(symbol)
@@ -144,7 +144,7 @@ module Dryad
         end
       end
     ensure
-      @@adding_method = false
+      @@wrapping_method = false
     end
   end
 
@@ -169,7 +169,7 @@ module Dryad
       @context_stack.push new_context
       begin
         statements = capture &block
-        @context_stack.last.send(:replay_capture, statements)
+        @context_stack.last.send(:replay, statements)
       ensure
         @context_stack.pop unless options[:leave_on_stack]
       end
