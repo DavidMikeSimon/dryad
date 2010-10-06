@@ -93,20 +93,18 @@ module Dryad
 
     # The evil sneaky method_missing for the silly hack used for delayed execution in class_eval
     # Method definitions will be trapped by method_added and appropriately wrapped
-    # Any attempts to call instance methods will be prevented, but recorded for later
-    @@recording = nil
+    # Any attempts to call instance methods will be forwarded to @@instance_method_target
+    @@instance_method_targets = []
     def self.method_missing(symbol, *args, &block)
-      @@recording << [symbol, args, block]
+      @@instance_method_targets.last << [symbol, args, block]
     end
  
-    def begin_capture
-      @@recording = []
-    end
-
-    def end_capture
-      r = @@recording
-      @@recording = nil
-      return r
+    def self.capture(&block)
+      @@instance_method_targets.push []
+      class_eval &block
+      return @@instance_method_targets.last
+    ensure
+      @@instance_method_targets.pop
     end
 
     def replay(statements)
@@ -168,19 +166,11 @@ module Dryad
 
       @context_stack.push new_context
       begin
-        statements = capture &block
+        statements = @context_stack.last.class.send(:capture, &block)
         @context_stack.last.send(:replay, statements)
       ensure
         @context_stack.pop unless options[:leave_on_stack]
       end
-    end
-
-    private
-
-    def capture(&block)
-      @context_stack.last.send(:begin_capture)
-      @context_stack.last.class.class_eval &block
-      return @context_stack.last.send(:end_capture)
     end
   end
 
