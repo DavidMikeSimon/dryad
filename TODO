@@ -10,3 +10,9 @@
 - Prevent AttributesHash from being modified in place after being setup
 - Consider freezing instance variables in sub contexts
 - Don't set @io until after tag libraries loaded, complain usefully if anything tries to write before then
+- If creating a block from recorded statements and there aren't any, make nil instead, not a no-op block
+  - That way any class that requires a block can simply do that by yielding without checking
+  - Also, user can use convenient block syntax on self-closing tags (i.e. to do an after on a <p/>)
+  - For if the user really wants to create a no-op block, maybe create a "no_content" tag
+- This whole record/replay thing is a bad idea; just open the tag as soon as we get any tag call
+  - This would require complaining if the user attempts a :before or :prepend after opening the tag
