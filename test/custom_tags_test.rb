@@ -230,6 +230,27 @@ class CustomTagsTest < Test::Unit::TestCase
     end
   end
 
+  def test_partially_delayed_block_evaluation
+    @dryad.add do
+      def bar
+        yield
+      end
+    end
+
+    assert_output 'BarFoo', @dryad do
+      bar do
+        # This part needs to be executed before bar is called...
+        def bar
+          v"Bar"
+          super
+        end
+
+        # And this part executed when the original bar definition yields
+        v"Foo"
+      end
+    end
+  end
+
   def test_name_error_suggestion
     @dryad.add do
       def duck
