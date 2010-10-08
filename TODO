@@ -4,6 +4,7 @@
   - In the HTML taglib, checks attributes for tag-specific validity
   - Flags attempts to use tag return values with helpful error messages
   - Does not cause a performance hit if not in use (use monkey-patches, not lots of ifs)
+  - Marks ActiveRecord instances in the instance variables as readonly
 - Add methods like dryml's before, after, prepend, append stuff, which check against tag name and class
 - Have all tags return nil (so that attempts to use tag return values cause errors)
 - Prevent AttributesHash from being modified in place after being setup
