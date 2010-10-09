@@ -1,4 +1,3 @@
-require 'default_tags'
 require 'exceptions'
 require 'near_miss_suggestions'
 
@@ -8,7 +7,6 @@ module Dryad
   class Dryad
     def initialize
       @tag_def_blocks = []
-      add_module DefaultTags
     end
  
     def output(target, &block)

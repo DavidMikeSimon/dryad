@@ -4,6 +4,7 @@ require 'cgi'
 class SimpleTagsTest < Test::Unit::TestCase
   def setup
     @dryad = Dryad::Dryad.new
+    @dryad.add_module Dryad::HtmlFormat
   end
 
   def test_very_simple_raw_tag

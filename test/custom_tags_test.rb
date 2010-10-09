@@ -4,6 +4,7 @@ require 'stringio'
 class CustomTagsTest < Test::Unit::TestCase
   def setup
     @dryad = Dryad::Dryad.new
+    @dryad.add_module Dryad::HtmlFormat
   end
 
   def test_simple_tag_def
