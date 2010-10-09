@@ -382,5 +382,19 @@ class CustomTagsTest < Test::Unit::TestCase
   end
 
   def test_running_redef_of_callee
+    @dryad.add do
+      def foo
+        v"Foo"
+      end
+    end
+
+    assert_output 'FooBar', @dryad do
+      running :foo do
+        def foo
+          super
+          v"Bar"
+        end
+      end
+    end
   end
 end
