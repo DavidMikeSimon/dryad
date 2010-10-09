@@ -47,8 +47,13 @@ module Dryad
     def running(method, *args)
       run do
         yield
-        send(method, *args)
+        send(method, *args, &get_content_block)
       end
+    end
+
+    # Specifies a block for "running" to pass to its method
+    def content(&block)
+      @_content_block = block
     end
 
     def attributes
@@ -56,6 +61,10 @@ module Dryad
     end
 
     private
+
+    def get_content_block
+      return @_content_block
+    end
 
     def self.subclass_for_writer(writer)
       subclass = Class.new(self)
@@ -163,11 +172,11 @@ module Dryad
 
     def run(options = {}, &block)
       new_context = cur_context.class.subclass_for_writer(self).new
-      cur_context.instance_variables.each do |varname|
-        next if varname[0,2] == "@_" # Dryad internals, not to be automatically copied
-        value = cur_context.instance_variable_get(varname.to_sym)
-        new_context.instance_variable_set(varname.to_sym, value)
-      end
+#      cur_context.instance_variables.each do |varname|
+#        next if varname[0,2] == "@_" # Dryad internals, not to be automatically copied
+#        value = cur_context.instance_variable_get(varname.to_sym)
+#        new_context.instance_variable_set(varname.to_sym, value)
+#      end
 
       @context_stack.push new_context
       begin

@@ -327,4 +327,37 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
   end
+
+  def test_running_with_content_block
+    @dryad.add do
+      def foo
+        yield
+        raw_tag :foo do
+          bar
+        end
+      end
+
+      def bar
+        raw_tag :bar
+      end
+    end
+
+    assert_output 'Narf<foo><baz/></foo>', @dryad do
+      running :foo do
+        def bar
+          raw_tag :baz
+        end
+
+        content do
+          v"Narf"
+        end
+      end
+    end
+  end
+
+  def test_nested_runnings
+  end
+
+  def test_running_no_content
+  end
 end
