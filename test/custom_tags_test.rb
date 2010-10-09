@@ -96,7 +96,7 @@ class CustomTagsTest < Test::Unit::TestCase
         raw_tag :bar
       end
     end
-    
+
     @dryad.add do
       def foo
         raw_tag :blork
@@ -303,5 +303,28 @@ class CustomTagsTest < Test::Unit::TestCase
     assert_match /\nPerhaps you meant one of these methods:\n duck\n duke/, exception.message
     assert_no_match /\bdup\b/, exception.message # Doesn't suggest common Object methods
     assert_no_match /\bfroboz\b/, exception.message # Doesn't suggest dissimilar method names
+  end
+
+  def test_running
+    @dryad.add do
+      def foo(subject)
+        v subject
+        raw_tag :foo do
+          bar
+        end
+      end
+
+      def bar
+        raw_tag :bar
+      end
+    end
+
+    assert_output 'Narf<foo><baz/></foo>', @dryad do
+      running :foo, "Narf" do
+        def bar
+          raw_tag :baz
+        end
+      end
+    end
   end
 end

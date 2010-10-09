@@ -43,6 +43,14 @@ module Dryad
       self.class.cur_writer.run &block
     end
 
+    # Runs the given method in a new sub-context, first executing the given block
+    def running(method, *args)
+      run do
+        yield
+        send(method, *args)
+      end
+    end
+
     def attributes
       @_attributes || AttributesHash.new
     end
