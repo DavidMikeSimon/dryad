@@ -34,18 +34,13 @@ module Dryad
   private
   
   class Context
-    def initialize(writer)
-      # Using funny underscored names to avoid clashing with user instance variables
-      @_writer = writer
-    end
-
     def raw_text(str)
-      @_writer.write str
+      self.class.cur_writer.write str
     end
 
     # Runs the given block in a new sub-context
     def run(&block)
-      @_writer.run &block
+      self.class.cur_writer.run &block
     end
 
     def attributes
@@ -53,6 +48,21 @@ module Dryad
     end
 
     private
+
+    def self.subclass_for_writer(writer)
+      subclass = Class.new(self)
+      subclass.class_eval do
+        singleton = lambda { class << self; self; end }.call
+        singleton.send(:define_method, :cur_writer) do
+          return writer
+        end
+      end
+      return subclass
+    end
+
+    def self.cur_writer
+      raise DryadError.new("No specific cur_writer defined in Context!")
+    end
 
     def process_tag_arguments(args)
       @_attributes = AttributesHash.new
@@ -84,7 +94,7 @@ module Dryad
       return new_args
     end
  
-    # The real method_missing for regular method calls
+    # The real method_missing for regular failed method calls
     # Overridden to use NearMissSuggestions to notice spelling errors in tag names
     def method_missing(symbol, *args, &block)
       super
@@ -92,46 +102,11 @@ module Dryad
       NearMissSuggestions::reraise_with_suggestions(e, self, $@)
     end
 
-    # The evil sneaky method_missing for the silly hack used for delayed execution in class_eval
+    # The evil sneaky method_missing for the silly hack used for hybrid evaluation
     # Method definitions will be trapped by method_added and appropriately wrapped
-    # Any attempts to call instance methods will be forwarded to @@instance_method_target
-    @@instance_method_targets = []
+    # Any attempts to call instance methods will be forwarded to cur_writer
     def self.method_missing(symbol, *args, &block)
-      @@instance_method_targets.last << [symbol, args, block]
-    end
- 
-    def self.capture(&block)
-      @@instance_method_targets.push []
-      class_eval &block
-      return @@instance_method_targets.last
-    ensure
-      @@instance_method_targets.pop
-    end
-
-    def replay(statements)
-      statements.each do |statement|
-        symbol, args, block = statement
-        send(symbol, *args, &block)
-      end
-    end
-
-    class InstanceSender
-      def initialize(target)
-        @target = target
-      end
-
-      def <<(statement)
-        symbol, args, block = statement
-        @target.send(symbol, *args, &block)
-      end
-    end
-
-    # Executes definitions in class_eval, but regular method calls in instance_eval
-    def self.hybrid_eval(instance, &block)
-      @@instance_method_targets.push InstanceSender.new(instance)
-      class_eval &block
-    ensure
-      @@instance_method_targets.pop
+      cur_writer.cur_context.send(symbol, *args, &block)
     end
 
     def self.include(mod)
@@ -154,7 +129,7 @@ module Dryad
       end
 
       # If a method by this name already exists in Kernel (p, for example), then
-      # we need to trap class-level calls for when we're recording later
+      # we also need to trap class-level calls so hybrid evaluation works for them 
       if @@kernel_methods.include?(symbol)
         singleton_class = lambda { class << self; self; end }.call
         singleton_class.send(:define_method, symbol) do |*args, &block|
@@ -169,7 +144,9 @@ module Dryad
   class DocumentWriter
     def initialize(io)
       @io = io
-      @context_stack = [Context.new(self)]
+
+      context_class = Context.subclass_for_writer(self)
+      @context_stack = [context_class.new]
     end
 
     def write(str)
@@ -177,19 +154,23 @@ module Dryad
     end
 
     def run(options = {}, &block)
-      new_context = Class.new(@context_stack.last.class).new(self)
-      @context_stack.last.instance_variables.each do |varname|
+      new_context = cur_context.class.subclass_for_writer(self).new
+      cur_context.instance_variables.each do |varname|
         next if varname[0,2] == "@_" # Dryad internals, not to be automatically copied
-        value = @context_stack.last.instance_variable_get(varname.to_sym)
+        value = cur_context.instance_variable_get(varname.to_sym)
         new_context.instance_variable_set(varname.to_sym, value)
       end
 
       @context_stack.push new_context
       begin
-        @context_stack.last.class.send(:hybrid_eval, @context_stack.last, &block)
+        cur_context.class.class_eval &block
       ensure
         @context_stack.pop unless options[:leave_on_stack]
       end
+    end
+
+    def cur_context
+      @context_stack.last
     end
   end
 
@@ -217,6 +198,7 @@ module Dryad
     end
 
     def merge(other_hash)
+      
       c = self.clone
       c.merge!(other_hash)
       return c
