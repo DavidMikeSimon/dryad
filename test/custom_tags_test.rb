@@ -356,8 +356,31 @@ class CustomTagsTest < Test::Unit::TestCase
   end
 
   def test_nested_runnings
+    @dryad.add do
+      def foo(&block)
+        raw_tag :foo, &block
+      end
+
+      def bar(&block)
+        raw_tag :bar, &block
+      end
+    end
+
+    assert_output '<foo>A<bar>B</bar>C</foo>', @dryad do
+      running :foo do
+        content do
+          v"A"
+          running :bar do
+            content do
+              v"B"
+            end
+          end
+          v"C"
+        end
+      end
+    end
   end
 
-  def test_running_no_content
+  def test_running_redef_of_callee
   end
 end

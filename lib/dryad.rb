@@ -64,6 +64,8 @@ module Dryad
 
     def get_content_block
       return @_content_block
+    ensure
+      @_content_block = nil
     end
 
     def self.subclass_for_writer(writer)
