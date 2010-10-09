@@ -90,7 +90,7 @@ class CustomTagsTest < Test::Unit::TestCase
     end
   end
 
-  def test_permanent_redef
+  def test_add_redef
     @dryad.add do
       def foo
         raw_tag :bar
