@@ -5,6 +5,8 @@
   - Flags attempts to use tag return values with helpful error messages
   - Does not cause a performance hit if not in use (use monkey-patches, not lots of ifs)
   - Marks ActiveRecord instances in the instance variables as readonly
+  - Notices and flags calls to puts
+  - Flags attempts to alter arguments to tag methods (maybe by setting them frozen?)
 - Add methods like dryml's before, after, prepend, append stuff, which check against tag name and class
 - Have all tags return nil (so that attempts to use tag return values cause errors)
 - Prevent AttributesHash from being modified in place after being setup
@@ -13,8 +15,6 @@
 - If creating a block from recorded statements and there aren't any, make nil instead, not a no-op block
   - That way any class that requires a block can simply do that by yielding without checking
   - Also, user can use convenient block syntax on self-closing tags (i.e. to do an after on a <p/>)
-  - For if the user really wants to create a no-op block, maybe create a "no_content" tag
-- This whole record/replay thing is a bad idea; just proceed to yield as soon as we get any tag call
-  - This would require complaining if the user attempts a :before or :prepend after opening the tag
+  - For if the user really wants to create a no-op block, create a "no_content" tag
 - Test that one tag-defining module can depend on another, and that including the base manually after that won't
   overwrite the child definitions

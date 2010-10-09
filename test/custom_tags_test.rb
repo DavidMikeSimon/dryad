@@ -51,9 +51,8 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
 
-    assert_output '<bar/><narf/><bar/>', @dryad do
+    assert_output '<narf/><bar/>', @dryad do
       run do
-        foo
         def foo
           raw_tag :narf
         end
@@ -77,9 +76,8 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
 
-    assert_output '<xyz><bar/></xyz><xyz><narf/></xyz><xyz><bar/></xyz>', @dryad do
+    assert_output '<xyz><narf/></xyz><xyz><bar/></xyz>', @dryad do
       run do
-        xyz
         def foo
           raw_tag :narf
         end
@@ -165,8 +163,7 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
 
-    assert_output '<bar/><narf/>', @dryad do
-      xyz
+    assert_output '<narf/>', @dryad do
       def foo
         raw_tag :narf
       end
@@ -230,7 +227,7 @@ class CustomTagsTest < Test::Unit::TestCase
     end
   end
 
-  def test_partially_delayed_block_evaluation
+  def test_callee_altering_block
     @dryad.add do
       def bar
         yield
@@ -239,7 +236,7 @@ class CustomTagsTest < Test::Unit::TestCase
 
     assert_output 'BarFoo', @dryad do
       bar do
-        # This part needs to be executed before bar is called...
+        # This part needs to be executed before bar is called or even resolved...
         def bar
           v"Bar"
           super
@@ -247,6 +244,31 @@ class CustomTagsTest < Test::Unit::TestCase
 
         # And this part executed when the original bar definition yields
         v"Foo"
+      end
+    end
+  end
+  
+  def test_partially_early_evaluation
+    @dryad.add do
+      def bar
+        foo
+        yield
+      end
+
+      def foo
+        v"ORIG"
+      end
+    end
+
+    assert_output 'NEWfoo', @dryad do
+      bar do
+        # This part needs to be executed before bar is called...
+        def foo
+          v"NEW"
+        end
+
+        # And this part executed when the original bar definition yields
+        v"foo"
       end
     end
   end

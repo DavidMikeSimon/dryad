@@ -94,44 +94,32 @@ module Dryad
 
     # The evil sneaky method_missing for the silly hack used for delayed execution in class_eval
     # Method definitions will be trapped by method_added and appropriately wrapped
-    # Any attempts to call instance methods will be forwarded to @@instance_method_target
-    @@instance_method_targets = []
+    # Any attempts to call instance methods will be recorded on @@instance_method_tape
+    @@instance_method_tape_stack = []
     def self.method_missing(symbol, *args, &block)
-      @@instance_method_targets.last << [symbol, args, block]
-    end
- 
-    def self.capture(&block)
-      @@instance_method_targets.push []
-      class_eval &block
-      return @@instance_method_targets.last
-    ensure
-      @@instance_method_targets.pop
+      @@instance_method_tape_stack.last << [symbol, args, block]
     end
 
-    def replay(statements)
+    def replay_statements(statements)
       statements.each do |statement|
         symbol, args, block = statement
         send(symbol, *args, &block)
       end
     end
 
-    class InstanceSender
-      def initialize(target)
-        @target = target
-      end
-
-      def <<(statement)
-        symbol, args, block = statement
-        @target.send(symbol, *args, &block)
-      end
-    end
-
-    # Executes definitions in class_eval, but regular method calls in instance_eval
-    def self.hybrid_eval(instance, &block)
-      @@instance_method_targets.push InstanceSender.new(instance)
+    # Executes definitions in class_eval and records method calls
+    # Then, either sends them to be replayed in instance, or returns a block to be used
+    def self.hybrid_eval(instance = nil, &block)
+      @@instance_method_tape_stack.push []
       class_eval &block
+      if instance
+        instance.send(:replay_statements, @@instance_method_tape_stack.last)
+      else
+        tape = @@instance_method_tape_stack.last
+        return proc { send(:replay_statements, tape) }
+      end
     ensure
-      @@instance_method_targets.pop
+      @@instance_method_tape_stack.pop
     end
 
     def self.include(mod)
@@ -146,11 +134,23 @@ module Dryad
     def self.method_added(symbol)
       return if @@wrapping_method
       @@wrapping_method = true
-      
+
       # Wrap the method that was defined with some convienent argument-preprocessing
       tag_def = instance_method(symbol)
       define_method symbol do |*args, &block|
-        tag_def.bind(self).call(*process_tag_arguments(args), &block)
+        if block
+          writer = @_writer
+          writer.run do
+            cur_context = writer.send(:cur_context)
+            # FIXME - Deliberate spelling error here to expose really strange response
+            new_args = cur_contex.send(:process_tag_arguments, args)
+            new_block = hybrid_eval(&block)
+            tag_def.bind(cur_context).call(*new_args, &new_block)
+          end
+        else
+          new_args = process_tag_arguments(args)
+          tag_def.bind(self).call(*new_args)
+        end
       end
 
       # If a method by this name already exists in Kernel (p, for example), then
@@ -178,18 +178,24 @@ module Dryad
 
     def run(options = {}, &block)
       new_context = Class.new(@context_stack.last.class).new(self)
-      @context_stack.last.instance_variables.each do |varname|
+      cur_context.instance_variables.each do |varname|
         next if varname[0,2] == "@_" # Dryad internals, not to be automatically copied
-        value = @context_stack.last.instance_variable_get(varname.to_sym)
+        value = cur_context.instance_variable_get(varname.to_sym)
         new_context.instance_variable_set(varname.to_sym, value)
       end
 
       @context_stack.push new_context
       begin
-        @context_stack.last.class.send(:hybrid_eval, @context_stack.last, &block)
+        cur_context.class.send(:hybrid_eval, cur_context, &block)
       ensure
         @context_stack.pop unless options[:leave_on_stack]
       end
+    end
+
+    private
+
+    def cur_context
+      @context_stack.last
     end
   end
 
