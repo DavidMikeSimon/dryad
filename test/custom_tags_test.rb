@@ -132,6 +132,54 @@ class CustomTagsTest < Test::Unit::TestCase
     end
   end
 
+  def test_inblock_redef_with_run
+    @dryad.add do
+      def foo
+        yield if block_given?
+        bar
+      end
+
+      def bar
+        raw_tag :bar
+      end
+    end
+
+    assert_output '<bar/><baz/><bar/>', @dryad do
+      foo
+      run do
+        foo do
+          def bar
+            raw_tag :baz
+          end
+        end
+      end
+      foo
+    end
+  end
+
+  def test_indef_redef_with_run
+    @dryad.add do
+      def foo
+        run do
+          def bar
+            raw_tag :baz, attributes
+          end
+          bar :x => "y"
+        end
+      end
+
+      def bar
+        raw_tag :bar, attributes
+      end
+    end
+
+    assert_output '<bar x="y"/><baz x="y"/><bar x="y"/>', @dryad do
+      bar :x => "y"
+      foo
+      bar :x => "y"
+    end
+  end
+
   def test_add_nested_redef
     @dryad.add do
       def foo
