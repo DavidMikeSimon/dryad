@@ -10,10 +10,11 @@ module Dryad
     end
  
     def output(target, &block)
-      writer = DocumentWriter.new(target)
+      writer = DocumentWriter.new
       @tag_def_blocks.each do |b|
         writer.run :leave_on_stack => true, &b
       end
+      writer.set_output(target)
       writer.run &block
     end
 
@@ -158,12 +159,22 @@ module Dryad
     end
   end
 
+  class DummyIO
+    def write(s)
+      raise WritingOutOfContextError.new("No output target yet defined")
+    end
+  end
+
   class DocumentWriter
-    def initialize(io)
-      @io = io
+    def initialize
+      @io = DummyIO.new
 
       context_class = Context.subclass_for_writer(self)
       @context_stack = [context_class.new]
+    end
+
+    def set_output(io)
+      @io = io || DummyIO.new
     end
 
     def write(str)
@@ -172,11 +183,6 @@ module Dryad
 
     def run(options = {}, &block)
       new_context = cur_context.class.subclass_for_writer(self).new
-#      cur_context.instance_variables.each do |varname|
-#        next if varname[0,2] == "@_" # Dryad internals, not to be automatically copied
-#        value = cur_context.instance_variable_get(varname.to_sym)
-#        new_context.instance_variable_set(varname.to_sym, value)
-#      end
 
       @context_stack.push new_context
       begin
