@@ -1,4 +1,4 @@
-- Allow optional use of a catious mode which:
+- Allow optional use of a development mode which:
   - Makes sure all attribute keys are valid in XML
   - Makes sure all tags are valid in XML
   - In the HTML taglib, checks attributes for tag-specific validity
@@ -7,8 +7,12 @@
   - Flags dangerous permanent redefs (i.e. like in custom_tag_tests.rb test_inblock_redef_with_run sans the run)
   - Flags attempts to use puts
   - Flags attempts to call tag methods within a running block; this will not do anything useful
+  - Applies NearMissSuggestions to regular method_missing (so, remove this from the regular dryad.rb where it is now)
   - Does not cause a performance hit if not in use (use monkey-patches, not lots of ifs)
-- Add methods like dryml's before, after, prepend, append stuff, which check against tag name and class
+- Add methods like dryml's before, after, prepend, append stuff
+  - Have some sort of general-purpose matching system for this, detecting tag name, class, id, parent, etc.
+- Polymorphic tag definitions (different definitions at the same layer that apply depending upon argument type)
+  - Given a plain ol' value, is there some way to tell where it came from, i.e. some column of some model?
 - Have all tags return nil (so that attempts to use tag return values cause errors)
 - Prevent AttributesHash from being modified in place after being setup
 - Consider freezing instance variables in sub contexts

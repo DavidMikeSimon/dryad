@@ -112,7 +112,7 @@ module Dryad
     end
  
     # The real method_missing for regular failed method calls
-    # Overridden to use NearMissSuggestions to notice spelling errors in tag names
+    # Overridden to use NearMissSuggestions to flag spelling errors in tag names
     def method_missing(symbol, *args, &block)
       super
     rescue NameError => e
