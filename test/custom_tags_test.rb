@@ -400,13 +400,9 @@ class CustomTagsTest < Test::Unit::TestCase
   end
 
   def test_pre_io_addition_cannot_write
-    @dryad.add do
-      v"Foo"
-    end
     assert_raise Dryad::WritingOutOfContextError do
-      @dryad.output(StringIO) do
-        # Error should be raised before this block is evaluated
-        flunk
+      @dryad.add do
+        v"Foo"
       end
     end
   end

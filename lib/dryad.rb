@@ -6,21 +6,16 @@ require 'set'
 module Dryad
   class Dryad
     def initialize
-      @tag_def_blocks = []
+      @writer = DocumentWriter.new
     end
  
     def output(target, &block)
-      writer = DocumentWriter.new
-      @tag_def_blocks.each do |b|
-        writer.run :leave_on_stack => true, &b
-      end
-      writer.set_output(target)
-      writer.run &block
+      @writer.run :output => target, &block
     end
 
     def add(&block)
       raise ArgumentError.new("Dryad.add must be given a block") unless block
-      @tag_def_blocks.push block
+      @writer.run :leave_on_stack => true, &block
     end
 
     def add_module(mod)
@@ -167,23 +162,20 @@ module Dryad
 
   class DocumentWriter
     def initialize
-      @io = DummyIO.new
+      @output = DummyIO.new
 
       context_class = Context.subclass_for_writer(self)
       @context_stack = [context_class.new]
     end
 
-    def set_output(io)
-      @io = io || DummyIO.new
-    end
-
     def write(str)
-      @io.write str
+      @output.write str
     end
 
     def run(options = {}, &block)
+      @output = options[:output] if options[:output]
+      
       new_context = cur_context.class.subclass_for_writer(self).new
-
       @context_stack.push new_context
       begin
         cur_context.class.class_eval &block
