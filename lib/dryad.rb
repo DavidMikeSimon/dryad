@@ -104,6 +104,7 @@ module Dryad
       end
       @_attributes[:id] = auto_id if auto_id
 
+      @_attributes.freeze
       return new_args
     end
  
@@ -222,7 +223,7 @@ module Dryad
     end
 
     def merge(other_hash)
-      c = self.clone
+      c = AttributesHash.new(self)
       c.merge!(other_hash)
       return c
     end

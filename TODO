@@ -10,14 +10,15 @@
   - Applies NearMissSuggestions to regular method_missing (so, remove this from the regular dryad.rb where it is now)
   - Makes sure output is not written during running block (also needs to be removed from regular dryad.rb where it is
     now)
+  - Freezes AttributesHash after setup (again move from current dryad.rb)
   - Does not cause a performance hit if not in use (use monkey-patches, not lots of ifs)
 - Add methods like dryml's before, after, prepend, append stuff
   - Have some sort of general-purpose matching system for this, detecting tag name, class, id, parent, etc.
   - Maybe based on a subset of CSS selector syntax?
 - Polymorphic tag definitions (different definitions at the same layer that apply depending upon argument type)
   - Given a plain ol' value, is there some way to tell where it came from, i.e. some column of some model?
-- Prevent AttributesHash from being modified in place after being setup
 - Instance variables
-  - Possibly frozen so that I don't have to worry about cloning
+  - Possibly frozen in subcontexts so that I don't have to worry about cloning
+  - Er, can one freeze a "view" of an object but leave the original mutable?
 - Test that one tag-defining module can depend on another, and that including the base manually after that won't
   overwrite the child definitions
