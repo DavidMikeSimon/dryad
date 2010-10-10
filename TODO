@@ -16,7 +16,6 @@
   - Maybe based on a subset of CSS selector syntax?
 - Polymorphic tag definitions (different definitions at the same layer that apply depending upon argument type)
   - Given a plain ol' value, is there some way to tell where it came from, i.e. some column of some model?
-- Have all tags return nil (so that attempts to use tag return values cause errors)
 - Prevent AttributesHash from being modified in place after being setup
 - Instance variables
   - Possibly frozen so that I don't have to worry about cloning

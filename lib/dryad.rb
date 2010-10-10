@@ -139,10 +139,11 @@ module Dryad
       tag_def = instance_method(symbol)
       define_method symbol do |*args, &block|
         tag_def.bind(self).call(*process_tag_arguments(args), &block)
+        return nil
       end
 
       # If a method by this name already exists in Kernel (p, for example), then
-      # we also need to trap class-level calls so hybrid evaluation works for them 
+      # we also need to trap class-level calls so hybrid evaluation works as for other methods
       if @@kernel_methods.include?(symbol)
         singleton_class = lambda { class << self; self; end }.call
         singleton_class.send(:define_method, symbol) do |*args, &block|
@@ -221,7 +222,6 @@ module Dryad
     end
 
     def merge(other_hash)
-      
       c = self.clone
       c.merge!(other_hash)
       return c
