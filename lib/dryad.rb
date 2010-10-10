@@ -78,7 +78,7 @@ module Dryad
     end
 
     def self.cur_writer
-      raise DryadError.new("No specific cur_writer defined in Context!")
+      raise InternalError.new("No specific cur_writer defined in Context!")
     end
 
     def process_tag_arguments(args)
