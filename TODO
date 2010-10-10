@@ -8,6 +8,8 @@
   - Flags attempts to use puts
   - Flags attempts to call tag methods within a running block; this will not do anything useful
   - Applies NearMissSuggestions to regular method_missing (so, remove this from the regular dryad.rb where it is now)
+  - Makes sure output is not written during running block (also needs to be removed from regular dryad.rb where it is
+    now)
   - Does not cause a performance hit if not in use (use monkey-patches, not lots of ifs)
 - Add methods like dryml's before, after, prepend, append stuff
   - Have some sort of general-purpose matching system for this, detecting tag name, class, id, parent, etc.

@@ -38,9 +38,9 @@ module Dryad
     end
 
     # Runs the given method in a new sub-context, first executing the given block
-    def running(method, *args)
+    def running(method, *args, &block)
       run do
-        yield
+        cur_writer.using_temporary_dummy_output &block
         send(method, *args, &get_content_block)
       end
     end
@@ -156,24 +156,24 @@ module Dryad
 
   class DummyIO
     def write(s)
-      raise WritingOutOfContextError.new("No output target yet defined")
+      raise WritingOutOfContextError.new("No output target available")
     end
   end
 
   class DocumentWriter
     def initialize
-      @output = DummyIO.new
+      @output_stack = [DummyIO.new]
 
       context_class = Context.subclass_for_writer(self)
       @context_stack = [context_class.new]
     end
 
     def write(str)
-      @output.write str
+      @output_stack.last.write str
     end
 
     def run(options = {}, &block)
-      @output = options[:output] if options[:output]
+      @output_stack.push (options[:output] || DummyIO.new) if options.has_key?(:output)
       
       new_context = cur_context.class.subclass_for_writer(self).new
       @context_stack.push new_context
@@ -181,7 +181,15 @@ module Dryad
         cur_context.class.class_eval &block
       ensure
         @context_stack.pop unless options[:leave_on_stack]
+        @output_stack.pop if options.has_key?(:output)
       end
+    end
+
+    def using_temporary_dummy_output(&block)
+      @output_stack.push DummyIO.new
+      cur_context.class.class_eval &block
+    ensure
+      @output_stack.pop
     end
 
     def cur_context

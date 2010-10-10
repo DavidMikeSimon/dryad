@@ -406,4 +406,15 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
   end
+
+  def test_mid_running_cannot_write
+    assert_raise Dryad::WritingOutOfContextError do
+      @dryad.output(StringIO.new) do
+        running :raw_tag, :p do
+          # Whoops forgot to specify 'content'
+          v"Foo"
+        end
+      end
+    end
+  end
 end
