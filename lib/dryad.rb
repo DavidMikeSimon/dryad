@@ -175,7 +175,7 @@ module Dryad
     end
 
     def run(options = {}, &block)
-      @output_stack.push (options[:output] || DummyIO.new) if options.has_key?(:output)
+      @output_stack.push(options[:output] || DummyIO.new) if options.has_key?(:output)
       
       new_context = cur_context.class.subclass_for_writer(self).new
       @context_stack.push new_context

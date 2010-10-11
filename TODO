@@ -20,5 +20,6 @@
 - Instance variables
   - Possibly frozen in subcontexts so that I don't have to worry about cloning
   - Er, can one freeze a "view" of an object but leave the original mutable?
+  - And anyways, it seems like freezing something (i.e. an array) doesn't prevent its contents from being changed
 - Test that one tag-defining module can depend on another, and that including the base manually after that won't
   overwrite the child definitions
