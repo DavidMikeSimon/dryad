@@ -306,7 +306,7 @@ class CustomTagsTest < Test::Unit::TestCase
     assert_no_match /\bfroboz\b/, exception.message # Doesn't suggest dissimilar method names
   end
 
-  def test_running
+  def test_running_redef
     @dryad.add do
       def foo(subject)
         v subject
@@ -329,7 +329,7 @@ class CustomTagsTest < Test::Unit::TestCase
     end
   end
 
-  def test_running_with_content_block
+  def test_running_redef_with_content_block
     @dryad.add do
       def foo
         yield
@@ -394,6 +394,29 @@ class CustomTagsTest < Test::Unit::TestCase
         def foo
           super
           v"Bar"
+        end
+      end
+    end
+  end
+
+  def test_running_named_content
+    @dryad.add do
+      def card
+        raw_tag :div do
+          raw_tag :p, :header!
+          raw_tag :p, :content!
+        end
+      end
+    end
+
+    assert_output '<div><p class="header">HEADER</p><p class="content">BODY</p></div>', @dryad do
+      running :card do
+        content :header! do
+          v"HEADER"
+        end
+
+        content do
+          v"BODY"
         end
       end
     end

@@ -11,6 +11,7 @@
   - Makes sure output is not written during running block (also needs to be removed from regular dryad.rb where it is
     now)
   - Freezes AttributesHash after setup (again move from current dryad.rb)
+  - Warns if 'content' method is given a non-bang-ending symbol
   - Does not cause a performance hit if not in use (use monkey-patches, not lots of ifs)
 - Add methods like dryml's before, after, prepend, append stuff
   - Have some sort of general-purpose matching system for this, detecting tag name, class, id, parent, etc.

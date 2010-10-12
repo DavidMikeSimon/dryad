@@ -28,6 +28,10 @@ module Dryad
   private
   
   class Context
+    def initialize(parent_context = nil)
+      @_content_blocks = parent_context ? parent_context.send(:instance_variable_get, :@_content_blocks) : {}
+    end
+
     def raw_text(str)
       self.class.cur_writer.write str
     end
@@ -38,16 +42,16 @@ module Dryad
     end
 
     # Runs the given method in a new sub-context, first executing the given block
-    def running(method, *args, &block)
+    def running(symbol, *args, &block)
       run do
-        cur_writer.using_temporary_dummy_output &block
-        send(method, *args, &get_content_block)
+        cur_writer.eval_with_dummy_output &block
+        send(symbol, *args)
       end
     end
 
-    # Specifies a block for "running" to pass to its method
-    def content(&block)
-      @_content_block = block
+    # Specifies a block for "running" to give its method access to
+    def content(symbol = :content!, &block)
+      @_content_blocks[symbol] = block
     end
 
     def attributes
@@ -55,12 +59,6 @@ module Dryad
     end
 
     private
-
-    def get_content_block
-      return @_content_block
-    ensure
-      @_content_block = nil
-    end
 
     def self.subclass_for_writer(writer)
       subclass = Class.new(self)
@@ -139,7 +137,16 @@ module Dryad
       # Wrap the method that was defined with some convienent argument-preprocessing
       tag_def = instance_method(symbol)
       define_method symbol do |*args, &block|
-        tag_def.bind(self).call(*process_tag_arguments(args), &block)
+        new_args = process_tag_arguments(args)
+        
+        cb = @_content_blocks
+        class_key = (attributes[:class].to_s + "!").to_sym
+        tgt_key = cb.has_key?(class_key) ? class_key : :content!
+        if block.nil? && cb.has_key?(tgt_key)
+          # Only delete the content_blocks entry if the wrapped definition actually yields
+          block = proc { cb.delete(tgt_key).call }
+        end
+        tag_def.bind(self).call(*new_args, &block)
         return nil
       end
 
@@ -177,17 +184,17 @@ module Dryad
     def run(options = {}, &block)
       @output_stack.push(options[:output] || DummyIO.new) if options.has_key?(:output)
       
-      new_context = cur_context.class.subclass_for_writer(self).new
+      new_context = cur_context.class.subclass_for_writer(self).new(cur_context)
       @context_stack.push new_context
       begin
-        cur_context.class.class_eval &block
+        new_context.class.class_eval &block
       ensure
         @context_stack.pop unless options[:leave_on_stack]
         @output_stack.pop if options.has_key?(:output)
       end
     end
 
-    def using_temporary_dummy_output(&block)
+    def eval_with_dummy_output(&block)
       @output_stack.push DummyIO.new
       cur_context.class.class_eval &block
     ensure
