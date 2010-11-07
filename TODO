@@ -6,13 +6,16 @@
   - Flags useless defs (i.e. like in custom_tag_tests.rb test_indef_redef_with_run sans the run)
   - Flags dangerous permanent redefs (i.e. like in custom_tag_tests.rb test_inblock_redef_with_run sans the run)
   - Flags attempts to use puts
-  - Flags attempts to call tag methods within a running block; this will not do anything useful
+  - Flags attempts to call tag methods within a running block; that wouldn't do anything useful
   - Applies NearMissSuggestions to regular method_missing (so, remove this from the regular dryad.rb where it is now)
   - Makes sure output is not written during running block (also needs to be removed from regular dryad.rb where it is
     now)
   - Freezes AttributesHash after setup (again move from current dryad.rb)
   - Warns if 'content' method is given a non-bang-ending symbol
   - Does not cause a performance hit if not in use (use monkey-patches, not lots of ifs)
+  - Does auto-indentation of output
+    - Replace newlines with HTML newline entities
+    - Watch out for tags like <pre>
 - Add methods like dryml's before, after, prepend, append stuff
   - Have some sort of general-purpose matching system for this, detecting tag name, class, id, parent, etc.
   - Maybe based on a subset of CSS selector syntax?
@@ -25,6 +28,8 @@
 - Test that one tag-defining module can depend on another, and that including the base manually after that won't
   overwrite the child definitions
 - Use rails html safety mechanism in the v tag
+- *Prevent* access to regular ActionView helpers (form_for, link_to, etc.), maybe allow access to them through a
+  mediated facility.
 
 - Make everything tag-class-oriented:
   - Advantages: very easy to mess with CSS, and to re-specify/re-define stuff by semantics instead of conceptually
@@ -40,7 +45,7 @@
       - Want to have content be appended to some stuff within a tag, i.e. "<p><div>FOO BAR</div>(content here)</p>"?
         Best probably to suck it up and just put it in a span, or if you really need it do a prepend.
   - To make everything classier (heh) should also probably make the first raw_tag within a tag definition get the same
-    class as the method name (i.e. if "def card" is "p { v'whateva' }" gets me a "<p class='card'>whateva</p>")
+    class as the method name (i.e. if "def card" is "p { v'whateva' }" then "card" gets me a "<p class='card'>whateva</p>")
     - If additional classes are specified, still prepend the magical method-name class
     - When doing polymorphism, also add a magic tag class for that, i.e. "<p class='card card-for-appointment'>"
     - If the first raw_tag is so special, maybe should disallow more than one major raw_tag call per method?
@@ -49,6 +54,7 @@
         - Advantages: would let user create regular utility methods (like helper methods), would possibly let me get rid
           of a lot of the more magical junk (i.e. can get rid of hybrid eval, and don't need to worry about super anymore)
         - Need to think about how parent tag gets attributes from child tag call
+      - Alternately, append magic tag class to _every_ raw_tag at that level, unless tag name itself matches
 
 - In Context should probably rename 'running' to 'oneoff', and 'run' to something like 'oneoff_block'
   - This is handy because it implies that it's like defining a child tag, but without having to seperate def and call,
