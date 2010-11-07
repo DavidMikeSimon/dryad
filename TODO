@@ -31,6 +31,10 @@
 - *Prevent* access to regular ActionView helpers (form_for, link_to, etc.), maybe allow access to them through a
   mediated facility.
 
+- Fix the too-deep targetting problem, what if something deep within the header supplies an optional content block?
+  - Ideally we'd like to associate content block based on which _def_ they're written in, which unfortunately
+    we can't figure out just from the stack...
+
 - Make everything very tag-class-oriented:
   - Advantages: very easy to mess with CSS, and to re-specify/re-define stuff by semantics instead of conceptually
     distant things like whether it's a div or a span

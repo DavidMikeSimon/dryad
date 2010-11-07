@@ -144,8 +144,7 @@ module Dryad
         tgt_key = cb.has_key?(class_key) ? class_key : :content!
         if block.nil? && cb.has_key?(tgt_key)
           # Only delete the content_blocks entry if the wrapped definition actually yields
-          # FIXME - This does NOT solve the too-deep targetting problem, what if something deep within the header has
-          # its own "body"?
+          # FIXME - This does NOT solve the too-deep targetting problem
           block = proc { cb.delete(tgt_key).call }
         end
         tag_def.bind(self).call(*new_args, &block)
