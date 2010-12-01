@@ -39,6 +39,3 @@
   - This is handy because it implies that it's like defining a child tag, but without having to seperate def and call,
     which is just the idiom I'm going for
   - Alternately maybe 'custom' and 'custom_block'
-- If getting rid of default arguments, might be able to compensate with convenience functions in AttributesHash
-  - Maybe an easy-subset thing (i.e. attributes[[:attr1, :attr2, :attr3]]) for passing on attributes
-  - To set default values, can just use attributes[:attr] ||= whatever

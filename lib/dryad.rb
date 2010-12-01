@@ -41,7 +41,7 @@ module Dryad
       self.class.cur_writer.run &block
     end
 
-    # Runs the given method in a new sub-context, first executing the given block
+    # Runs the given method in a new sub-context, first executing the given block in that context
     def running(symbol, *args, &block)
       run do
         cur_writer.eval_with_dummy_output &block
