@@ -50,7 +50,7 @@ module Dryad
     end
 
     # Specifies a block for "running" to give its method access to
-    def content(symbol = :content!, &block)
+    def content(symbol = :content, &block)
       @_content_blocks[symbol] = block
     end
 
@@ -106,7 +106,7 @@ module Dryad
       return new_args
     end
  
-    # The real method_missing for regular failed method calls
+    # The real method_missing for regular failed method calls.
     # Overridden to use NearMissSuggestions to flag spelling errors in tag names
     def method_missing(symbol, *args, &block)
       super
@@ -114,7 +114,7 @@ module Dryad
       NearMissSuggestions::reraise_with_suggestions(e, self, $@)
     end
 
-    # The evil sneaky method_missing for the silly hack used for hybrid evaluation
+    # The evil sneaky method_missing for the silly hack used for hybrid evaluation.
     # Method definitions will be trapped by method_added and appropriately wrapped
     # Any attempts to call instance methods will be forwarded to cur_writer
     def self.method_missing(symbol, *args, &block)
@@ -140,13 +140,19 @@ module Dryad
         new_args = process_tag_arguments(args)
         
         cb = @_content_blocks
-        class_key = (attributes[:class].to_s + "!").to_sym
-        tgt_key = cb.has_key?(class_key) ? class_key : :content!
-        if block.nil? && cb.has_key?(tgt_key)
-          # Only delete the content_blocks entry if the wrapped definition actually yields
-          # FIXME - This does NOT solve the too-deep targetting problem
-          block = proc { cb.delete(tgt_key).call }
+        default_block = block
+        if not default_block
+          default_block = cb.delete(:content)
         end
+        # Only delete the content_blocks entry if the wrapped definition actually yields
+        # FIXME - This does NOT solve the too-deep targetting problem
+#        block = proc do |arg|
+#          if arg
+#            cb.delete(arg).call
+#          else
+#            default_block.call
+#          end
+#        end
         tag_def.bind(self).call(*new_args, &block)
         return nil
       end
