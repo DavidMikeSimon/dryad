@@ -35,30 +35,6 @@
   - Ideally we'd like to associate content block based on which _def_ they're written in, which unfortunately
     we can't figure out just from the stack...
 
-- Make everything very tag-class-oriented:
-  - Advantages: very easy to mess with CSS, and to re-specify/re-define stuff by semantics instead of conceptually
-    distant things like whether it's a div or a span
-  - Should probably make class shortcuts regular symbols (no bang-appends) so bang-appends can be used for special stuff
-  - Get rid of yields, don't pass blocks to tag definitions
-  - Regular content block (whether passed by simple sub-block of tag call or through 'content' in running) to be made
-    the regular content of the tag with the :content class, which trickles down until we get to a raw_tag
-      - Implies that raw_tag needs to be kind of special, not just another tag; would be nice if it were still modular
-      - Need to complain if content block is passed to a tag that doesn't have a :content class tag somewhere within it
-      - Want to define a tag that puts stuff directly next to plain content, i.e. "<p><div>FOO BAR</div>(content here)</p>"?
-        Best probably to suck it up and just put content in a span, or if you really need it this way use the prepend facility.
-        - Alternately could allow user to use :content with v, even though no actual HTML class will be set.
-  - To make everything classier (heh) should also probably make the first raw_tag within a tag definition get the same
-    class as the method name (i.e. if "def card" is "p { v'whateva' }" then "card" gets me a "<p class='card'>whateva</p>")
-    - If additional classes are specified, still prepend the magical method-name class
-    - When doing polymorphism, also add a magic tag class for that, i.e. "<p class='card card-for-appointment'>"
-    - If the first raw_tag is so special, maybe should disallow more than one major raw_tag call per method?
-      - Or maybe should just get rid of def syntax and create a tag_def that's always based on an upper tag?
-        - This would get rid of default arguments, but I can't think of any other significant disadvantage...
-        - Advantages: would let user create regular utility methods (like helper methods), would possibly let me get rid
-          of a lot of the more magical junk (i.e. can get rid of hybrid eval, and don't need to worry about super anymore)
-        - Need to think about how parent tag gets attributes from child tag call
-      - Alternately, append magic tag class to _every_ raw_tag at that level, unless tag name itself matches
-
 - In Context should probably rename 'running' to 'oneoff', and 'run' to something like 'oneoff_block'
   - This is handy because it implies that it's like defining a child tag, but without having to seperate def and call,
     which is just the idiom I'm going for
