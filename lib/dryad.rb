@@ -146,6 +146,7 @@ module Dryad
         end
         # Only delete the content_blocks entry if the wrapped definition actually yields
         # FIXME - This does NOT solve the too-deep targetting problem
+        # Alternate possibility: forget about named content blocks, just use dryml-like content replacement for that
 #        block = proc do |arg|
 #          if arg
 #            cb.delete(arg).call
