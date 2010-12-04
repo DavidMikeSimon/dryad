@@ -39,3 +39,16 @@
   - This is handy because it implies that it's like defining a child tag, but without having to seperate def and call,
     which is just the idiom I'm going for
   - Alternately maybe 'custom' and 'custom_block'
+
+- Adopt something like DRYML's implicit context 'this', and also 'this_field', for:
+  - Eventual backwards compatibility measures
+  - Polymorphism target
+  - Ability to see the parent of this
+  - Convenience of not having to respecify stuff to be pushed down
+  - Note: DRYML does not have magic field recognition, can *I* have magic field recognition please?
+    - Then I wouldn't have to duplicate DRYML's "field=" stuff.
+    - Maybe will have to rely on having a list of fields, and install wrappers on those methods
+      - Watch out for custom fields, i.e. "def name first_name + last_name end"
+      - Maybe this can be handled with viewhints? Tagged methods = columns U hinted fields
+      - Ack, cannot put instance methods on fixnums.
+      - Hm, have to make sure the wrappers aren't ridiculously slow. How to only wrap methods called from the view?

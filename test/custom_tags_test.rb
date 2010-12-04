@@ -403,7 +403,7 @@ class CustomTagsTest < Test::Unit::TestCase
     @dryad.add do
       def card
         raw_tag :div do
-          raw_tag :p, :header! do
+          raw_tag :p, :headsup! do
             yield :header
           end
           raw_tag :p do
@@ -413,7 +413,7 @@ class CustomTagsTest < Test::Unit::TestCase
       end
     end
 
-    assert_output '<div><p class="header">HEADER</p><p class="content">BODY</p></div>', @dryad do
+    assert_output '<div><p class="headsup">HEADER</p><p>BODY</p></div>', @dryad do
       running :card do
         content :header do
           v"HEADER"

@@ -28,10 +28,6 @@ module Dryad
   private
   
   class Context
-    def initialize(parent_context = nil)
-      @_content_blocks = parent_context ? parent_context.send(:instance_variable_get, :@_content_blocks) : {}
-    end
-
     def raw_text(str)
       self.class.cur_writer.write str
     end
@@ -50,7 +46,9 @@ module Dryad
     end
 
     # Specifies a block for "running" to give its method access to
-    def content(symbol = :content, &block)
+    # TODO : Make this fail outside running blocks
+    def content(symbol = :default, &block)
+      @_content_blocks ||= {}
       @_content_blocks[symbol] = block
     end
 
@@ -139,22 +137,23 @@ module Dryad
       define_method symbol do |*args, &block|
         new_args = process_tag_arguments(args)
         
-        cb = @_content_blocks
-        default_block = block
-        if not default_block
-          default_block = cb.delete(:content)
+        cb = @_content_blocks || {}
+        @_content_blocks = {}
+        cb[:default] = block if block
+        functor = nil
+        if cb.size > 0
+          functor = Proc.new do |*args|
+            key = :default
+            key = args[0] if args.size > 0 and args[0].is_a?(Symbol)
+            if cb.has_key?(key)
+              cb[key].call
+            else
+              # TODO Write a test for this
+              raise NoSuchContentBlock.new("There is no content block named #{key.inspect}")
+            end
+          end
         end
-        # Only delete the content_blocks entry if the wrapped definition actually yields
-        # FIXME - This does NOT solve the too-deep targetting problem
-        # Alternate possibility: forget about named content blocks, just use dryml-like content replacement for that
-#        block = proc do |arg|
-#          if arg
-#            cb.delete(arg).call
-#          else
-#            default_block.call
-#          end
-#        end
-        tag_def.bind(self).call(*new_args, &block)
+        tag_def.bind(self).call(*new_args, &functor)
         return nil
       end
 
@@ -192,7 +191,7 @@ module Dryad
     def run(options = {}, &block)
       @output_stack.push(options[:output] || DummyIO.new) if options.has_key?(:output)
       
-      new_context = cur_context.class.subclass_for_writer(self).new(cur_context)
+      new_context = cur_context.class.subclass_for_writer(self).new()
       @context_stack.push new_context
       begin
         new_context.class.class_eval &block
