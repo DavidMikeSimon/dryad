@@ -31,10 +31,6 @@
 - *Prevent* access to regular ActionView helpers (form_for, link_to, etc.), maybe allow access to them through a
   mediated facility.
 
-- Fix the too-deep targetting problem, what if something deep within the header supplies an optional content block?
-  - Ideally we'd like to associate content block based on which _def_ they're written in, which unfortunately
-    we can't figure out just from the stack...
-
 - In Context should probably rename 'running' to 'oneoff', and 'run' to something like 'oneoff_block'
   - This is handy because it implies that it's like defining a child tag, but without having to seperate def and call,
     which is just the idiom I'm going for
