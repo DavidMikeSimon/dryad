@@ -8,9 +8,13 @@ module Dryad
         attr_str = " " + attributes.map{|k,v| "#{k}=\"#{CGI::escapeHTML(v)}\""}.join(" ")
       end
 
-      if block
+      had_content = false
+      callback = Proc.new do
+        had_content = true
         raw_text "<#{sym.to_s}#{attr_str}>"
-        run &block
+      end
+      yield :default, callback
+      if had_content
         raw_text "</#{sym.to_s}>"
       else
         raw_text "<#{sym.to_s}#{attr_str}/>"

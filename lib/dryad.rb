@@ -143,7 +143,10 @@ module Dryad
         functor = Proc.new do |*args|
           key = :default
           key = args[0] if args.size > 0 and args[0].is_a?(Symbol)
+          callback = nil
+          callback = args[1] if args.size > 1
           if cb.has_key?(key)
+            callback.call if callback
             cb[key].call
           end
         end

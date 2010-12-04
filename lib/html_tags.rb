@@ -9,13 +9,17 @@ module Dryad
     end
 
     def p(subject = nil, &block)
-      block ||= proc { v subject }
-      raw_tag :p, attributes, &block
+      raw_tag :p, attributes do
+        v subject if subject
+        yield
+      end
     end
     
     def b(subject = nil, &block)
-      block ||= proc { v subject }
-      raw_tag :b, attributes, &block
+      raw_tag :b, attributes do
+        v subject if subject
+        yield
+      end
     end
 
     def hr

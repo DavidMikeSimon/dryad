@@ -7,15 +7,14 @@
   - Flags dangerous permanent redefs (i.e. like in custom_tag_tests.rb test_inblock_redef_with_run sans the run)
   - Flags attempts to use puts
   - Flags attempts to call tag methods within a running block; that wouldn't do anything useful
+  - Flags content blocks specified but never used
   - Applies NearMissSuggestions to regular method_missing (so, remove this from the regular dryad.rb where it is now)
   - Makes sure output is not written during running block (also needs to be removed from regular dryad.rb where it is
     now)
   - Freezes AttributesHash after setup (again move from current dryad.rb)
-  - Warns if 'content' method is given a non-bang-ending symbol
   - Does not cause a performance hit if not in use (use monkey-patches, not lots of ifs)
-  - Does auto-indentation of output
-    - Replace newlines with HTML newline entities
-    - Watch out for tags like <pre>
+  - Special debugging classes/attrs to show where things came from (FireBug support?)
+  - No auto-indentation of output; it's too tricky to get right, and FireBug owns anyways
 - Add methods like dryml's before, after, prepend, append stuff
   - Have some sort of general-purpose matching system for this, detecting tag name, class, id, parent, etc.
   - Maybe based on a subset of CSS selector syntax?
@@ -48,3 +47,4 @@
       - Maybe this can be handled with viewhints? Tagged methods = columns U hinted fields
       - Ack, cannot put instance methods on fixnums.
       - Hm, have to make sure the wrappers aren't ridiculously slow. How to only wrap methods called from the view?
+  - Bah, maybe this is a terrible idea. Is there some other way I can do backwards compatibility?
