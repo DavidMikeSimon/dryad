@@ -48,3 +48,7 @@
       - Ack, cannot put instance methods on fixnums.
       - Hm, have to make sure the wrappers aren't ridiculously slow. How to only wrap methods called from the view?
   - Bah, maybe this is a terrible idea. Is there some other way I can do backwards compatibility?
+
+- Yield thing doesn't let me do some things DRYML does:
+  - Specify yield arguments more than one layer away
+  - Specify default value (can I pass another do block to yield?)
