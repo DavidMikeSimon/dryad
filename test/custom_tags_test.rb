@@ -426,6 +426,25 @@ class CustomTagsTest < Test::Unit::TestCase
     end
   end
 
+  def test_unspecified_named_content_is_blank
+    @dryad.add do
+      def card
+        raw_tag :div do
+          yield :foo
+        end
+      end
+    end
+
+    assert_output '<div></div>', @dryad do
+      running :card do
+      end
+    end
+
+    assert_output '<div></div>', @dryad do
+      card
+    end
+  end
+
   def test_pre_io_addition_cannot_write
     assert_raise Dryad::WritingOutOfContextError do
       @dryad.add do

@@ -140,17 +140,11 @@ module Dryad
         cb = @_content_blocks || {}
         @_content_blocks = {}
         cb[:default] = block if block
-        functor = nil
-        if cb.size > 0
-          functor = Proc.new do |*args|
-            key = :default
-            key = args[0] if args.size > 0 and args[0].is_a?(Symbol)
-            if cb.has_key?(key)
-              cb[key].call
-            else
-              # TODO Write a test for this
-              raise NoSuchContentBlock.new("There is no content block named #{key.inspect}")
-            end
+        functor = Proc.new do |*args|
+          key = :default
+          key = args[0] if args.size > 0 and args[0].is_a?(Symbol)
+          if cb.has_key?(key)
+            cb[key].call
           end
         end
         tag_def.bind(self).call(*new_args, &functor)
